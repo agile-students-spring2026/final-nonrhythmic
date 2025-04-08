@@ -30,9 +30,24 @@ The current prototype includes:
 
 ## Run the project locally
 
-This repository’s runnable **front-end** lives in [`front-end/`](./front-end/). There is no separate back-end in this repo yet; follow the front-end README to install, develop, build, and lint.
+Run the **back-end** first, then the **front-end**. The API defaults to **http://127.0.0.1:3001** (`PORT` overrides). Vite (port **5173** when free) proxies **`/api`** to that API. Run `npm start` in `back-end/`, then `npm run dev` in `front-end/`.
 
-**Quick start:**
+**1. API (Express)**
+
+```bash
+cd back-end
+npm install
+npm start
+```
+
+Back-end tests (Mocha + Chai, coverage via c8):
+
+```bash
+cd back-end
+npm test
+```
+
+**2. Front-end**
 
 ```bash
 cd front-end
@@ -40,7 +55,9 @@ npm install
 npm run dev
 ```
 
-For production build, preview, lint, and notes on secrets, see [`front-end/README.md`](./front-end/README.md).
+Optional: set `PORT` for the API via environment variable; do not commit `.env` with secrets.
+
+For production build, preview, lint, and more detail, see [`front-end/README.md`](./front-end/README.md).
 
 ---
 

@@ -1,8 +1,40 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { apiUrl } from './apiBase'
 import MainNav from './MainNav'
 import './AuthPage.css'
 
 function LoginPage() {
+  const navigate = useNavigate()
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    setError('')
+    setSubmitting(true)
+    const data = new FormData(e.currentTarget)
+    try {
+      const res = await fetch(apiUrl('/api/auth/login'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: data.get('email'),
+          password: data.get('password'),
+        }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body.error || `Error ${res.status}`)
+      }
+      navigate('/')
+    } catch (err) {
+      setError(err.message || 'Could not sign in.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <div className="auth-page">
       <div className="auth-shell">
@@ -21,12 +53,7 @@ function LoginPage() {
           <h1 className="auth-title">Sign in</h1>
         </header>
 
-        <form
-          className="auth-form"
-          onSubmit={(e) => {
-            e.preventDefault()
-          }}
-        >
+        <form className="auth-form" onSubmit={handleSubmit}>
           <label className="auth-field">
             <span className="auth-label">Email</span>
             <input
@@ -35,6 +62,7 @@ function LoginPage() {
               name="email"
               autoComplete="username"
               placeholder="you@school.edu"
+              required
             />
           </label>
           <label className="auth-field">
@@ -45,10 +73,12 @@ function LoginPage() {
               name="password"
               autoComplete="current-password"
               placeholder="••••••••"
+              required
             />
           </label>
-          <button type="submit" className="auth-submit">
-            Sign in
+          {error && <p className="auth-error">{error}</p>}
+          <button type="submit" className="auth-submit" disabled={submitting}>
+            {submitting ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
 
@@ -66,4 +96,3 @@ function LoginPage() {
 }
 
 export default LoginPage
-

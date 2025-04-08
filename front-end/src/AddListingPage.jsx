@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useListings } from './hooks/useListings'
 import MainNav from './MainNav'
 import './AddListingPage.css'
 
@@ -20,6 +21,7 @@ const initialForm = {
 
 function AddListingPage() {
   const navigate = useNavigate()
+  const { createListing } = useListings()
   const [form, setForm] = useState(initialForm)
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -57,22 +59,11 @@ function AddListingPage() {
         }
 
     try {
-      const res = await fetch('http://localhost:3000/api/listings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      })
-
-      if (!res.ok) {
-        throw new Error('Failed to submit listing')
-      }
-
-      await res.json()
+      await createListing(payload)
       setSubmitted(true)
     } catch (err) {
-      setSubmitError('Could not submit listing right now.')
+      const msg = err instanceof Error && err.message ? err.message : 'Could not submit listing right now.'
+      setSubmitError(msg)
     } finally {
       setSubmitting(false)
     }

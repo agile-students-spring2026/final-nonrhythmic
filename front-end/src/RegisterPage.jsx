@@ -1,8 +1,47 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { apiUrl } from './apiBase'
 import MainNav from './MainNav'
 import './AuthPage.css'
 
 function RegisterPage() {
+  const navigate = useNavigate()
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    setError('')
+    const data = new FormData(e.currentTarget)
+    const password = data.get('password')
+    const confirm = data.get('confirmPassword')
+    if (password !== confirm) {
+      setError('Passwords do not match.')
+      return
+    }
+    setSubmitting(true)
+    try {
+      const res = await fetch(apiUrl('/api/auth/register'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: data.get('name'),
+          email: data.get('email'),
+          password,
+        }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body.error || `Error ${res.status}`)
+      }
+      navigate('/login')
+    } catch (err) {
+      setError(err.message || 'Could not create account.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <div className="auth-page">
       <div className="auth-shell">
@@ -21,15 +60,10 @@ function RegisterPage() {
           <h1 className="auth-title">Create account</h1>
         </header>
 
-        <form
-          className="auth-form"
-          onSubmit={(e) => {
-            e.preventDefault()
-          }}
-        >
+        <form className="auth-form" onSubmit={handleSubmit}>
           <label className="auth-field">
             <span className="auth-label">Display name</span>
-            <input className="auth-input" type="text" name="name" placeholder="Your name" />
+            <input className="auth-input" type="text" name="name" placeholder="Your name" required />
           </label>
           <label className="auth-field">
             <span className="auth-label">Email</span>
@@ -39,6 +73,7 @@ function RegisterPage() {
               name="email"
               autoComplete="email"
               placeholder="you@school.edu"
+              required
             />
           </label>
           <label className="auth-field">
@@ -49,6 +84,8 @@ function RegisterPage() {
               name="password"
               autoComplete="new-password"
               placeholder="At least 8 characters"
+              required
+              minLength={8}
             />
           </label>
           <label className="auth-field">
@@ -59,10 +96,12 @@ function RegisterPage() {
               name="confirmPassword"
               autoComplete="new-password"
               placeholder="Re-enter password"
+              required
             />
           </label>
-          <button type="submit" className="auth-submit">
-            Create account
+          {error && <p className="auth-error">{error}</p>}
+          <button type="submit" className="auth-submit" disabled={submitting}>
+            {submitting ? 'Creating…' : 'Create account'}
           </button>
         </form>
 
@@ -80,4 +119,3 @@ function RegisterPage() {
 }
 
 export default RegisterPage
-

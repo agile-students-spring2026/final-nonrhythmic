@@ -160,6 +160,12 @@
   text-underline-offset: 3px;
 }
 
+.auth-error {
+  color: #c0392b;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
 .auth-page .bottom-nav {
   margin-top: 1.25rem;
   padding-top: 0.75rem;
