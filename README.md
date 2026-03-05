@@ -31,9 +31,9 @@ The current prototype includes:
 ## Team Members
 
 - Jack Chen — https://github.com/hc4893-lab  
-- Kaiyuan Wu -https://github.com/qiexian-mf 
-- Anthony Lu -https://www.github.com/anthonylu23
-- (Add teammate names here)
+- Kaiyuan Wu - https://github.com/qiexian-mf 
+- Anthony Lu - https://www.github.com/anthonylu23
+- Jungwoo Park - https://github.com/ParkJ82
 
 ---
 
