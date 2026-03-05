@@ -32,7 +32,7 @@ The current prototype includes:
 
 - Jack Chen — https://github.com/hc4893-lab  
 - Kaiyuan Wu -https://github.com/qiexian-mf 
-- (Add teammate names here)  
+- Anthony Lu -https://www.github.com/anthonylu23
 - (Add teammate names here)
 
 ---
