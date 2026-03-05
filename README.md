@@ -34,6 +34,7 @@ The current prototype includes:
 - Kaiyuan Wu - https://github.com/qiexian-mf 
 - Anthony Lu - https://www.github.com/anthonylu23
 - Jungwoo Park - https://github.com/ParkJ82
+- Khushboo Agrawal- https://github.com/KhushbooAgrawal190803
 
 ---
 
