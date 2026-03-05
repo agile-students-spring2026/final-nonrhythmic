@@ -31,7 +31,7 @@ The current prototype includes:
 ## Team Members
 
 - Jack Chen — https://github.com/hc4893  
-- (Add teammate names here)  
+- Kaiyuan Wu -https://github.com/qiexian-mf 
 - (Add teammate names here)  
 - (Add teammate names here)
 
