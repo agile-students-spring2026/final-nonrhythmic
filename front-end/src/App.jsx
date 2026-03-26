@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import './App.css'
 import ListingsPage from './ListingsPage'
 import ListingDetailPage from './ListingDetailPage'
+import ProfilePage from './ProfilePage'
 
 function App() {
   return (
