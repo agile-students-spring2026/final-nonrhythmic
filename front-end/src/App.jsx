@@ -1,0 +1,17 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import './App.css'
+import ListingsPage from './ListingsPage'
+import ListingDetailPage from './ListingDetailPage'
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<ListingsPage />} />
+        <Route path="/listing" element={<ListingDetailPage />} />
+      </Routes>
+    </BrowserRouter>
+  )
+}
+
+export default App
