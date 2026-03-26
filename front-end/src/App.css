@@ -194,3 +194,40 @@ body {
 .active-nav {
   font-weight: bold;
 }
+
+.listing-card {
+  border: 1px solid #ccc;
+  border-radius: 16px;
+  padding: 10px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f9f9f9;
+}
+
+.image-box {
+  width: 60px;
+  height: 60px;
+  background: #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.listing-info {
+  flex: 1;
+}
+
+.listing-name {
+  font-weight: bold;
+}
+
+.listing-price {
+  font-weight: bold;
+}
+
+.save-icon {
+  font-size: 18px;
+}
