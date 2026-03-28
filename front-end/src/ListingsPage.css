@@ -1,0 +1,244 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
+
+.listings-page {
+  --lp-bg: #ebebeb;
+  --lp-surface: #ffffff;
+  --lp-ink: #0a0a0a;
+  --lp-muted: #5c5c5c;
+  --lp-faint: #8a8a8a;
+  --lp-line: #d4d4d4;
+  --lp-line-soft: #e8e8e8;
+  --lp-font: 'Outfit', system-ui, sans-serif;
+
+  min-height: 100svh;
+  margin: 0;
+  padding: 1.25rem 1rem 2rem;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: var(--lp-bg);
+  font-family: var(--lp-font);
+}
+
+.listings-page * {
+  box-sizing: border-box;
+}
+
+.listings-shell {
+  width: 100%;
+  max-width: 390px;
+  text-align: left;
+  min-height: min(720px, 100svh);
+  background: var(--lp-surface);
+  border: 1px solid var(--lp-line);
+  border-radius: 28px;
+  padding: 1.25rem 1rem 1.5rem;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 24px 48px -32px rgba(0, 0, 0, 0.28);
+}
+
+.listings-page .listings-heading {
+  margin: 0 0 1.125rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: var(--lp-ink);
+  text-align: left;
+}
+
+.listings-toolbar {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.listings-search-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.875rem;
+  min-height: 48px;
+  background: #f7f7f7;
+  border: 1px solid var(--lp-line-soft);
+  border-radius: 14px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.listings-search-wrap:focus-within {
+  background: #fff;
+  border-color: var(--lp-ink);
+}
+
+.listings-search-icon {
+  flex-shrink: 0;
+  width: 1.125rem;
+  height: 1.125rem;
+  color: var(--lp-faint);
+  opacity: 0.9;
+}
+
+.listings-search {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 0.9375rem;
+  color: var(--lp-ink);
+  min-width: 0;
+  outline: none;
+}
+
+.listings-search::placeholder {
+  color: var(--lp-faint);
+}
+
+.listings-filter-btn {
+  flex-shrink: 0;
+  width: 48px;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--lp-line);
+  border-radius: 14px;
+  background: var(--lp-surface);
+  color: var(--lp-ink);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.1s ease;
+}
+
+.listings-filter-btn:hover {
+  background: #fafafa;
+  border-color: #c0c0c0;
+}
+
+.listings-filter-btn:active {
+  transform: scale(0.97);
+}
+
+.listings-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.listings-page .listings-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  border-radius: 18px;
+  transition: transform 0.12s ease;
+}
+
+.listings-page .listings-card-link:active {
+  transform: scale(0.99);
+}
+
+/* Feed card — only inside listings page */
+.listings-page .listing-card--feed {
+  margin: 0;
+  padding: 0.75rem;
+  gap: 0.875rem;
+  display: flex;
+  align-items: stretch;
+  background: var(--lp-surface);
+  border: 1px solid var(--lp-line-soft);
+  border-radius: 18px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+}
+
+.listings-page .listing-card--feed:focus-within {
+  outline: 2px solid var(--lp-ink);
+  outline-offset: 2px;
+}
+
+.listings-page .listing-card__thumb {
+  width: 4.75rem;
+  height: 4.75rem;
+  flex-shrink: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #e8e8e8;
+}
+
+.listings-page .listing-card__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.listings-page .listing-card--feed .listing-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding-right: 1.5rem;
+  position: relative;
+}
+
+.listings-page .listing-card--feed .listing-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.listings-page .listing-card--feed .listing-name {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--lp-ink);
+  line-height: 1.25;
+}
+
+.listings-page .listing-card--feed .listing-rating {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--lp-muted);
+  white-space: nowrap;
+}
+
+.listings-page .listing-card--feed .listing-location {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--lp-muted);
+  line-height: 1.35;
+}
+
+.listings-page .listing-card--feed .listing-details {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--lp-faint);
+}
+
+.listings-page .listing-card--feed .listing-price {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--lp-ink);
+}
+
+.listings-page .listing-card--feed .save-icon {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  font-size: 1.125rem;
+  line-height: 1;
+  color: var(--lp-muted);
+  cursor: default;
+  user-select: none;
+}
