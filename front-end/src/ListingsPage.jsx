@@ -1,28 +1,51 @@
-import { Link } from 'react-router-dom'
+import { useMemo, useState } from 'react'
 import ListingCard from './ListingCard'
 import './ListingsPage.css'
 
-function ListingsPage() {
-  const listings = [
-    {
-      id: 1,
-      name: 'NYC Apartment',
-      location: 'Manhattan',
-      price: '$1,200/mo',
-    },
-    {
-      id: 2,
-      name: 'Brooklyn Room',
-      location: 'Brooklyn',
-      price: '$900/mo',
-    },
-    {
-      id: 3,
-      name: 'Queens Studio',
-      location: 'Queens',
-      price: '$1,100/mo',
-    },
+const LISTINGS = [
+  { id: 1, name: 'NYC Apartment', location: 'Manhattan', price: '$1,200/mo', rating: '4.7', details: '1 bed · 1 bath' },
+  { id: 2, name: 'Brooklyn Room', location: 'Brooklyn', price: '$900/mo', rating: '4.4', details: 'Private room · shared bath' },
+  { id: 3, name: 'Queens Studio', location: 'Queens', price: '$1,100/mo', rating: '4.6', details: 'Studio · 1 bath' },
+  { id: 4, name: 'East Village Walk-up', location: 'Manhattan', price: '$1,350/mo', rating: '4.8', details: '2 bed · 1 bath' },
+  { id: 5, name: 'Journal Square 2BR', location: 'Jersey City', price: '$1,050/mo', rating: '4.3', details: '2 bed · 1 bath' },
+  { id: 6, name: 'Williamsburg Loft', location: 'Brooklyn', price: '$1,450/mo', rating: '4.9', details: '1 bed · 1 bath' },
+  { id: 7, name: 'Astoria Summer Sublet', location: 'Queens', price: '$980/mo', rating: '4.5', details: '1 bed · 1 bath' },
+  { id: 8, name: 'Harlem Room Share', location: 'Manhattan', price: '$850/mo', rating: '4.2', details: 'Private room · 2 bed unit' },
+  { id: 9, name: 'Financial District Studio', location: 'Manhattan', price: '$1,600/mo', rating: '4.6', details: 'Studio · 1 bath' },
+  { id: 10, name: 'Bushwick Artist Flat', location: 'Brooklyn', price: '$1,175/mo', rating: '4.7', details: '2 bed · 1 bath' },
+]
+
+function listingMatchesQuery(listing, rawQuery) {
+  const q = rawQuery.trim().toLowerCase()
+  if (!q) return true
+  const haystack = [
+    listing.name,
+    listing.location,
+    listing.details,
+    listing.price,
   ]
+    .join(' ')
+    .toLowerCase()
+  return q.split(/\s+/).every((token) => haystack.includes(token))
+}
+
+function ListingsPage() {
+  const [savedIds, setSavedIds] = useState(() => new Set())
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const visibleListings = useMemo(
+    () => LISTINGS.filter((l) => listingMatchesQuery(l, searchQuery)),
+    [searchQuery],
+  )
+
+  function toggleSaved(id) {
+    setSavedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   return (
     <div className="listings-page">
@@ -48,6 +71,9 @@ function ListingsPage() {
               type="search"
               placeholder="Search neighborhoods"
               autoComplete="off"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              aria-controls="listings-feed"
             />
           </label>
           <button type="button" className="listings-filter-btn" aria-label="Filters">
@@ -62,18 +88,30 @@ function ListingsPage() {
           </button>
         </div>
 
-        <div className="listings-feed">
-          {listings.map((listing) => (
-            <Link to="/listing" className="listings-card-link" key={listing.id}>
-              <ListingCard
-                variant="feed"
-                imageSeed={`subvet-${listing.id}`}
-                name={listing.name}
-                location={listing.location}
-                price={listing.price}
-              />
-            </Link>
-          ))}
+        <div className="listings-feed" id="listings-feed" role="list">
+          {visibleListings.length === 0 ? (
+            <p className="listings-empty" role="status">
+              No listings match &ldquo;{searchQuery.trim()}&rdquo;. Try another neighborhood or
+              keyword.
+            </p>
+          ) : (
+            visibleListings.map((listing) => (
+              <div key={listing.id} role="listitem">
+                <ListingCard
+                  variant="feed"
+                  to="/listing"
+                  imageSeed={`subvet-${listing.id}`}
+                  name={listing.name}
+                  location={listing.location}
+                  price={listing.price}
+                  rating={listing.rating}
+                  details={listing.details}
+                  saved={savedIds.has(listing.id)}
+                  onFavoriteToggle={() => toggleSaved(listing.id)}
+                />
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>
