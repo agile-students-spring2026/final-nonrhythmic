@@ -114,3 +114,120 @@ body {
   color: inherit;
   display: block;
 }
+.page {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.phone-frame {
+  width: 320px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  padding: 16px;
+  background: #fff;
+}
+
+.title {
+  text-align: center;
+}
+
+.profile-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.profile-picture {
+  width: 80px;
+  height: 80px;
+  background: gray;
+  margin: 10px auto;
+}
+
+.profile-section {
+  margin-bottom: 20px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.edit-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.profile-textarea {
+  width: 100%;
+  height: 80px;
+}
+
+.profile-info-box {
+  border: 1px solid #ccc;
+  padding: 8px;
+}
+
+.my-listing-title {
+  margin-bottom: 10px;
+}
+
+.card-link {
+  text-decoration: none;
+  color: black;
+}
+
+.bottom-nav {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 20px;
+  border-top: 1px solid #ccc;
+  padding-top: 10px;
+}
+
+.nav-item {
+  font-size: 12px;
+}
+
+.active-nav {
+  font-weight: bold;
+}
+
+.listing-card {
+  border: 1px solid #ccc;
+  border-radius: 16px;
+  padding: 10px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f9f9f9;
+}
+
+.image-box {
+  width: 60px;
+  height: 60px;
+  background: #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.listing-info {
+  flex: 1;
+}
+
+.listing-name {
+  font-weight: bold;
+}
+
+.listing-price {
+  font-weight: bold;
+}
+
+.save-icon {
+  font-size: 18px;
+}
