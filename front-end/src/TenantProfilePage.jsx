@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router-dom'
 import { getTenantById } from './data/tenants'
+import MainNav from './MainNav'
 import './TenantProfilePage.css'
 
 function TenantProfilePage() {
@@ -14,6 +15,7 @@ function TenantProfilePage() {
           <Link to="/tenants" className="tenant-profile-back-link">
             Back to intern tenants
           </Link>
+          <MainNav active="tenants" />
         </div>
       </div>
     )
@@ -92,6 +94,7 @@ function TenantProfilePage() {
             Contact
           </button>
         </footer>
+        <MainNav active="tenants" />
       </article>
     </div>
   )

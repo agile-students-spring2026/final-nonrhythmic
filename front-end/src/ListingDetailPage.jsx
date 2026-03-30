@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { fetchProductById } from './api/fetchProductById'
+import MainNav from './MainNav'
 import './ListingDetailPage.css'
 
 function ListingDetailPage() {
@@ -66,6 +67,7 @@ function ListingDetailInner({ id }) {
       <div className="listing-detail-page">
         <div className="listing-detail-shell listing-detail-shell--center">
           <p className="listing-detail-status">Loading…</p>
+          <MainNav active="listings" />
         </div>
       </div>
     )
@@ -79,6 +81,7 @@ function ListingDetailInner({ id }) {
           <Link to="/listings" className="listing-detail-back-inline">
             ← Back to listings
           </Link>
+          <MainNav active="listings" />
         </div>
       </div>
     )
@@ -162,6 +165,7 @@ function ListingDetailInner({ id }) {
             </button>
           </div>
         </footer>
+        <MainNav active="listings" />
       </article>
 
       {mapPickerOpen ? (

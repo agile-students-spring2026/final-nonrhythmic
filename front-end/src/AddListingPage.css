@@ -23,6 +23,12 @@
   box-sizing: border-box;
 }
 
+.add-listing-page .bottom-nav {
+  margin-top: 1.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--ap-line-soft);
+}
+
 .add-listing-shell {
   position: relative;
   width: 100%;

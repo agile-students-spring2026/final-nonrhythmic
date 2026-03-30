@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import MainNav from './MainNav'
 import './AddListingPage.css'
 
 function AddListingPage() {
@@ -21,6 +22,7 @@ function AddListingPage() {
         <Link to="/" className="add-listing-cta">
           Back to home
         </Link>
+        <MainNav active="add" />
       </div>
     </div>
   )

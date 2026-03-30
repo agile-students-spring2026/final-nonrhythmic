@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ListingCard from './ListingCard'
+import MainNav from './MainNav'
 import { useListings } from './hooks/useListings'
 
 function ProfilePage() {
@@ -81,23 +82,7 @@ function ProfilePage() {
           )}
         </div>
 
-        <div className="bottom-nav">
-          <Link to="/" className="nav-item">
-            Home
-          </Link>
-          <Link to="/listings" className="nav-item">
-            Subleases
-          </Link>
-          <Link to="/tenants" className="nav-item">
-            Tenants
-          </Link>
-          <Link to="/add-listing" className="nav-item">
-            Add listing
-          </Link>
-          <Link to="/profile" className="nav-item active-nav">
-            Profile
-          </Link>
-        </div>
+        <MainNav active="profile" />
       </div>
     </div>
   )

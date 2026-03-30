@@ -203,3 +203,16 @@
   background: #222;
   border-color: #222;
 }
+
+.tenant-profile-page .bottom-nav {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0.75rem 1rem 1rem;
+  border-top: 1px solid var(--vp-line-soft);
+}
+
+.tenant-profile-shell--narrow .bottom-nav {
+  margin-top: 1rem;
+  padding-left: 0;
+  padding-right: 0;
+}

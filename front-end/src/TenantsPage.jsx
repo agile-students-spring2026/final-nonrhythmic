@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { TENANTS } from './data/tenants'
+import MainNav from './MainNav'
 import './TenantsPage.css'
 
 function tenantMatchesLocation(tenant, rawQuery) {
@@ -88,6 +89,7 @@ function TenantsPage() {
             ))
           )}
         </div>
+        <MainNav active="tenants" />
       </div>
     </div>
   )

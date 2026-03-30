@@ -328,3 +328,14 @@
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+.listing-detail-page .bottom-nav {
+  flex-shrink: 0;
+  margin: 1rem 1rem 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--lp-line-soft);
+}
+
+.listing-detail-shell--center .bottom-nav {
+  margin-inline: 0;
+}

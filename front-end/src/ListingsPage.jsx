@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ListingCard from './ListingCard'
+import MainNav from './MainNav'
 import { useListings } from './hooks/useListings'
 import './ListingsPage.css'
 
@@ -222,6 +223,7 @@ function ListingsPage() {
               </div>
             ))}
         </div>
+        <MainNav active="listings" />
       </div>
 
       {filterOpen ? (

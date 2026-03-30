@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import MainNav from './MainNav'
 import './HomePage.css'
 
 function HomePage() {
@@ -30,6 +31,7 @@ function HomePage() {
             <span className="home-tile-desc">Coming soon</span>
           </Link>
         </nav>
+        <MainNav active="home" />
       </div>
     </div>
   )
