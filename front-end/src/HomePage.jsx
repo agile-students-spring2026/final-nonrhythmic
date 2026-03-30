@@ -11,6 +11,14 @@ function HomePage() {
           <p className="home-tagline">
             Subleases and intern housing—browse places or find roommates for the summer.
           </p>
+          <div className="home-auth">
+            <Link to="/login" className="home-auth-link">
+              Sign in
+            </Link>
+            <Link to="/register" className="home-auth-link home-auth-link--primary">
+              Create account
+            </Link>
+          </div>
         </header>
 
         <nav className="home-nav" aria-label="Main">
