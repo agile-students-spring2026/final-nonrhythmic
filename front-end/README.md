@@ -1,16 +1,59 @@
-# React + Vite
+# SubVet front-end
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React application (Vite) for the SubVet sublease discovery UI.
 
-Currently, two official plugins are available:
+## Prerequisites
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- [Node.js](https://nodejs.org/) **18 or newer** (LTS recommended)
+- npm (included with Node)
 
-## React Compiler
+## Install dependencies
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+From this directory (`front-end/`):
 
-## Expanding the ESLint configuration
+```bash
+npm install
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Run in development
+
+Starts the Vite dev server with hot reload (default URL shown in the terminal, usually `http://localhost:5173`):
+
+```bash
+npm run dev
+```
+
+## Production build
+
+```bash
+npm run build
+```
+
+Static output is written to `dist/`.
+
+## Preview the production build locally
+
+After a build, serve the `dist/` folder:
+
+```bash
+npm run preview
+```
+
+## Lint
+
+```bash
+npm run lint
+```
+
+## Secrets and configuration
+
+Do **not** commit API keys, database connection strings, or other secrets. If the project later uses environment variables, keep real values in a local `.env` file that is listed in `.gitignore` and never checked in. Submit any required `.env` contents to course staff only through the channel your team uses.
+
+## Scripts reference
+
+| Command | Description |
+|--------|---------------|
+| `npm run dev` | Development server |
+| `npm run build` | Production build to `dist/` |
+| `npm run preview` | Preview `dist/` locally |
+| `npm run lint` | Run ESLint |

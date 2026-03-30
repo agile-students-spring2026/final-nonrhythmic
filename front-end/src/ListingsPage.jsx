@@ -88,11 +88,6 @@ function ListingsPage() {
 
   useEffect(() => {
     if (!filterOpen) return
-    setDraftFilters(cloneFilters(appliedFilters))
-  }, [filterOpen, appliedFilters])
-
-  useEffect(() => {
-    if (!filterOpen) return
     function onKey(e) {
       if (e.key === 'Escape') setFilterOpen(false)
     }
@@ -167,7 +162,10 @@ function ListingsPage() {
             }
             aria-label="Filters"
             aria-expanded={filterOpen}
-            onClick={() => setFilterOpen(true)}
+            onClick={() => {
+              setDraftFilters(cloneFilters(appliedFilters))
+              setFilterOpen(true)
+            }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path
