@@ -1,0 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
+
+.home-page {
+  --hp-bg: #ebebeb;
+  --hp-surface: #ffffff;
+  --hp-ink: #0a0a0a;
+  --hp-muted: #5c5c5c;
+  --hp-faint: #8a8a8a;
+  --hp-line: #d4d4d4;
+  --hp-line-soft: #e8e8e8;
+  --hp-font: 'Outfit', system-ui, sans-serif;
+
+  min-height: 100svh;
+  margin: 0;
+  padding: 1.25rem 1rem 2rem;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: var(--hp-bg);
+  font-family: var(--hp-font);
+}
+
+.home-page * {
+  box-sizing: border-box;
+}
+
+.home-shell {
+  width: 100%;
+  max-width: 390px;
+  background: var(--hp-surface);
+  border: 1px solid var(--hp-line);
+  border-radius: 28px;
+  padding: 1.35rem 1rem 1.25rem;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 24px 48px -32px rgba(0, 0, 0, 0.28);
+}
+
+.home-header {
+  margin-bottom: 1.25rem;
+  text-align: left;
+}
+
+.home-title {
+  margin: 0 0 0.375rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--hp-ink);
+}
+
+.home-tagline {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--hp-muted);
+}
+
+.home-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.home-tile {
+  display: block;
+  padding: 1rem 1rem;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid var(--hp-line-soft);
+  border-radius: 16px;
+  background: #fafafa;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.1s ease;
+}
+
+.home-tile:hover {
+  border-color: #c8c8c8;
+  background: #fff;
+}
+
+.home-tile:active {
+  transform: scale(0.99);
+}
+
+.home-tile--muted {
+  opacity: 0.92;
+}
+
+.home-tile-label {
+  display: block;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--hp-ink);
+  margin-bottom: 0.25rem;
+}
+
+.home-tile-desc {
+  display: block;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: var(--hp-faint);
+}

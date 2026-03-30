@@ -39,7 +39,7 @@ function ListingDetailPage() {
     <div className="listing-detail-page">
       <article className="listing-detail-shell">
         <div className="listing-detail-hero">
-          <Link to="/" className="listing-detail-back" aria-label="Back to listings">
+          <Link to="/listings" className="listing-detail-back" aria-label="Back to listings">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path
                 d="M15 6l-6 6 6 6"

@@ -26,7 +26,20 @@ function ProfilePage() {
   return (
     <div className="page">
       <div className="phone-frame">
-        <h1 className="title">My Profile</h1>
+        <div className="profile-top-bar">
+          <Link to="/" className="profile-back-btn" aria-label="Back to home">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M15 6l-6 6 6 6"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </Link>
+          <h1 className="title profile-page-title">My Profile</h1>
+        </div>
 
         <div className="profile-header">
           <h3 className="profile-username">Username</h3>
@@ -74,10 +87,21 @@ function ProfilePage() {
         </div>
 
         <div className="bottom-nav">
-          <Link to="/" className="nav-item">Sublease List</Link>
-          <span className="nav-item">Tenant List</span>
-          <span className="nav-item">Add Listing</span>
-          <Link to="/profile" className="nav-item active-nav">Profile</Link>
+          <Link to="/" className="nav-item">
+            Home
+          </Link>
+          <Link to="/listings" className="nav-item">
+            Subleases
+          </Link>
+          <Link to="/tenants" className="nav-item">
+            Tenants
+          </Link>
+          <Link to="/add-listing" className="nav-item">
+            Add listing
+          </Link>
+          <Link to="/profile" className="nav-item active-nav">
+            Profile
+          </Link>
         </div>
       </div>
     </div>
