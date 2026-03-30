@@ -524,3 +524,9 @@
   letter-spacing: -0.01em;
   color: var(--lp-ink);
 }
+
+.listings-page .bottom-nav {
+  flex-shrink: 0;
+  margin-top: 0.5rem;
+  border-color: var(--lp-line-soft);
+}

@@ -105,3 +105,9 @@
   line-height: 1.35;
   color: var(--hp-faint);
 }
+
+.home-page .bottom-nav {
+  margin-top: 1.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--hp-line-soft);
+}
