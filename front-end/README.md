@@ -51,6 +51,13 @@ Sublease listings are loaded at runtime from the public [DummyJSON](https://dumm
 
 All main screens use the same bottom bar (`MainNav`): Home, Subleases, Listings feed, Listing detail, Tenants list, Tenant profile, Add listing, and Profile.
 
+## Auth screens (UI only)
+
+If the app will eventually support login/registration, the UI placeholders are available at:
+
+- `/login`
+- `/register`
+
 ## Secrets and configuration
 
 Do **not** commit API keys, database connection strings, or other secrets. If the project later uses environment variables, keep real values in a local `.env` file that is listed in `.gitignore` and never checked in. Submit any required `.env` contents to course staff only through the channel your team uses.

@@ -8,6 +8,8 @@ import TenantsPage from './TenantsPage'
 import TenantProfilePage from './TenantProfilePage'
 import ProfilePage from './ProfilePage'
 import AddListingPage from './AddListingPage'
+import LoginPage from './LoginPage'
+import RegisterPage from './RegisterPage'
 
 function App() {
   return (
@@ -22,6 +24,8 @@ function App() {
           <Route path="/tenant/:tenantId" element={<TenantProfilePage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/add-listing" element={<AddListingPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
         </Routes>
       </BrowserRouter>
     </ListingsProvider>
