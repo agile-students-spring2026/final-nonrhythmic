@@ -1,27 +1,15 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ListingCard from './ListingCard'
+import { useListings } from './hooks/useListings'
 
 function ProfilePage() {
+  const { listings, loading } = useListings()
+  const myListings = useMemo(() => listings.slice(0, 2), [listings])
   const [isEditing, setIsEditing] = useState(false)
   const [info, setInfo] = useState(
-    'Hi, I am looking for a clean and safe place near campus. I prefer a quiet environment and easy access to public transportation.'
+    'Hi, I am looking for a clean and safe place near campus. I prefer a quiet environment and easy access to public transportation.',
   )
-
-  const myListings = [
-    {
-      id: 1,
-      name: 'NYC Apartment',
-      location: 'Manhattan',
-      price: '$1200/month',
-    },
-    {
-      id: 2,
-      name: 'Brooklyn Room',
-      location: 'Brooklyn',
-      price: '$900/month',
-    },
-  ]
 
   return (
     <div className="page">
@@ -71,19 +59,26 @@ function ProfilePage() {
         <div className="profile-section">
           <h3 className="my-listing-title">My Listings</h3>
 
-          {myListings.map((listing) => (
-            <Link
-              to="/listing"
-              className="card-link"
-              key={listing.id}
-            >
-              <ListingCard
-                name={listing.name}
-                location={listing.location}
-                price={listing.price}
-              />
-            </Link>
-          ))}
+          {loading ? (
+            <p className="profile-listings-hint">Loading listings…</p>
+          ) : myListings.length === 0 ? (
+            <p className="profile-listings-hint">No listings yet.</p>
+          ) : (
+            myListings.map((listing) => (
+              <Link
+                to={`/listing/${listing.id}`}
+                className="card-link"
+                key={listing.id}
+              >
+                <ListingCard
+                  name={listing.name}
+                  location={listing.location}
+                  price={listing.price}
+                  imageSeed={`subvet-${listing.id}`}
+                />
+              </Link>
+            ))
+          )}
         </div>
 
         <div className="bottom-nav">

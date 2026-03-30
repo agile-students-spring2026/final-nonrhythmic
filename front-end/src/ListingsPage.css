@@ -77,6 +77,17 @@
   text-align: left;
 }
 
+.listings-status {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  color: var(--lp-muted);
+  text-align: left;
+}
+
+.listings-status--error {
+  color: #9a3412;
+}
+
 .listings-toolbar {
   display: flex;
   align-items: stretch;

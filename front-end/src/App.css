@@ -114,6 +114,12 @@ body {
   margin-bottom: 10px;
 }
 
+.profile-listings-hint {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: #666;
+}
+
 .card-link {
   text-decoration: none;
   color: black;

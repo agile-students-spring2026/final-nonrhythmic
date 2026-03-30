@@ -45,6 +45,10 @@ npm run preview
 npm run lint
 ```
 
+## Mock listing data
+
+Sublease listings are loaded at runtime from the public [DummyJSON](https://dummyjson.com/) API (no key). You need network access for listings, profile “My listings,” and listing detail. Tenant profiles still use local mock data in `src/data/tenants.js` until a tenant API exists.
+
 ## Secrets and configuration
 
 Do **not** commit API keys, database connection strings, or other secrets. If the project later uses environment variables, keep real values in a local `.env` file that is listed in `.gitignore` and never checked in. Submit any required `.env` contents to course staff only through the channel your team uses.

@@ -1,19 +1,45 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
+import { fetchProductById } from './api/fetchProductById'
 import './ListingDetailPage.css'
 
-const LISTING_MAP_QUERY =
-  'Greenwich Village, Manhattan, New York, NY'
-
-const LISTING_DESCRIPTION = `Spacious and fully furnished 1-bedroom apartment available for summer sublease from June through August. Near transit, grocery, and laundry. Quiet building; utilities included except internet.
-
-The unit gets strong daylight, includes a desk and basic kitchenware, and the building has an elevator. Ideal for one person or a couple; no pets per lease. Move-in flexible within the first week of June; move-out by August 31.`
-
 function ListingDetailPage() {
+  const { id } = useParams()
+  return <ListingDetailInner key={id} id={id} />
+}
+
+function ListingDetailInner({ id }) {
+  const [listing, setListing] = useState(null)
+  const [loadError, setLoadError] = useState(null)
+  const [loading, setLoading] = useState(true)
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
   const [mapPickerOpen, setMapPickerOpen] = useState(false)
   const mapTitleId = useId()
   const mapPrimaryActionRef = useRef(null)
+
+  useEffect(() => {
+    let cancelled = false
+    fetchProductById(id)
+      .then((data) => {
+        if (cancelled) return
+        if (!data) {
+          setLoadError('Listing not found.')
+          setListing(null)
+        } else {
+          setListing(data)
+          setLoadError(null)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setLoadError('Could not load this listing.')
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [id])
 
   useEffect(() => {
     if (!mapPickerOpen) return
@@ -26,7 +52,7 @@ function ListingDetailPage() {
   }, [mapPickerOpen])
 
   function openMaps(provider) {
-    const q = encodeURIComponent(LISTING_MAP_QUERY)
+    const q = encodeURIComponent(listing?.mapQuery ?? 'New York, NY')
     const url =
       provider === 'google'
         ? `https://www.google.com/maps/search/?api=1&query=${q}`
@@ -34,6 +60,31 @@ function ListingDetailPage() {
     window.open(url, '_blank', 'noopener,noreferrer')
     setMapPickerOpen(false)
   }
+
+  if (loading) {
+    return (
+      <div className="listing-detail-page">
+        <div className="listing-detail-shell listing-detail-shell--center">
+          <p className="listing-detail-status">Loading…</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (loadError || !listing) {
+    return (
+      <div className="listing-detail-page">
+        <div className="listing-detail-shell listing-detail-shell--center">
+          <p className="listing-detail-status">{loadError || 'Not found.'}</p>
+          <Link to="/listings" className="listing-detail-back-inline">
+            ← Back to listings
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  const reviewCount = 12 + (listing.id % 40)
 
   return (
     <div className="listing-detail-page">
@@ -51,7 +102,7 @@ function ListingDetailPage() {
             </svg>
           </Link>
           <img
-            src="https://picsum.photos/seed/subvet-detail/960/600"
+            src={`https://picsum.photos/seed/subvet-detail-${listing.id}/960/600`}
             alt=""
             width={960}
             height={600}
@@ -60,7 +111,7 @@ function ListingDetailPage() {
 
         <div className="listing-detail-body">
           <div className="listing-detail-header">
-            <h1 className="listing-detail-title">Summer sublet near campus</h1>
+            <h1 className="listing-detail-title">{listing.name}</h1>
             <button
               type="button"
               className="listing-detail-map-link listing-detail-map-trigger"
@@ -70,8 +121,12 @@ function ListingDetailPage() {
             </button>
           </div>
 
-          <p className="listing-detail-rating">★ 4.8 · 24 reviews</p>
-          <p className="listing-detail-location">Manhattan · 12 min to campus</p>
+          <p className="listing-detail-rating">
+            ★ {listing.rating} · {reviewCount} reviews
+          </p>
+          <p className="listing-detail-location">
+            {listing.location} · {listing.details}
+          </p>
 
           <p
             className={
@@ -80,7 +135,7 @@ function ListingDetailPage() {
                 : 'listing-detail-description listing-detail-description--clamped'
             }
           >
-            {LISTING_DESCRIPTION}
+            {listing.description}
           </p>
 
           <button
@@ -96,7 +151,7 @@ function ListingDetailPage() {
         <footer className="listing-detail-footer">
           <div className="listing-detail-price-block">
             <p className="listing-detail-price-label">Price</p>
-            <p className="listing-detail-price-value">$1,200/mo</p>
+            <p className="listing-detail-price-value">{listing.price}</p>
           </div>
           <div className="listing-detail-actions">
             <button type="button" className="listing-detail-btn listing-detail-btn--ghost">

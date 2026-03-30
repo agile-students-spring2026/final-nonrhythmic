@@ -1,20 +1,8 @@
 import { useEffect, useId, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ListingCard from './ListingCard'
+import { useListings } from './hooks/useListings'
 import './ListingsPage.css'
-
-const LISTINGS = [
-  { id: 1, name: 'NYC Apartment', location: 'Manhattan', price: '$1,200/mo', rating: '4.7', details: '1 bed · 1 bath', bhk: '1', area: 'Manhattan', rentUsd: 1200 },
-  { id: 2, name: 'Brooklyn Room', location: 'Brooklyn', price: '$900/mo', rating: '4.4', details: 'Private room · shared bath', bhk: 'room', area: 'Brooklyn', rentUsd: 900 },
-  { id: 3, name: 'Queens Studio', location: 'Queens', price: '$1,100/mo', rating: '4.6', details: 'Studio · 1 bath', bhk: 'studio', area: 'Queens', rentUsd: 1100 },
-  { id: 4, name: 'East Village Walk-up', location: 'Manhattan', price: '$1,350/mo', rating: '4.8', details: '2 bed · 1 bath', bhk: '2', area: 'Manhattan', rentUsd: 1350 },
-  { id: 5, name: 'Journal Square 2BR', location: 'Jersey City', price: '$1,050/mo', rating: '4.3', details: '2 bed · 1 bath', bhk: '2', area: 'Jersey City', rentUsd: 1050 },
-  { id: 6, name: 'Williamsburg Loft', location: 'Brooklyn', price: '$1,450/mo', rating: '4.9', details: '1 bed · 1 bath', bhk: '1', area: 'Brooklyn', rentUsd: 1450 },
-  { id: 7, name: 'Astoria Summer Sublet', location: 'Queens', price: '$980/mo', rating: '4.5', details: '1 bed · 1 bath', bhk: '1', area: 'Queens', rentUsd: 980 },
-  { id: 8, name: 'Harlem Room Share', location: 'Manhattan', price: '$850/mo', rating: '4.2', details: 'Private room · 2 bed unit', bhk: 'room', area: 'Manhattan', rentUsd: 850 },
-  { id: 9, name: 'Financial District Studio', location: 'Manhattan', price: '$1,600/mo', rating: '4.6', details: 'Studio · 1 bath', bhk: 'studio', area: 'Manhattan', rentUsd: 1600 },
-  { id: 10, name: 'Bushwick Artist Flat', location: 'Brooklyn', price: '$1,175/mo', rating: '4.7', details: '2 bed · 1 bath', bhk: '2', area: 'Brooklyn', rentUsd: 1175 },
-]
 
 const BHK_OPTIONS = [
   { key: 'studio', label: 'Studio' },
@@ -29,8 +17,6 @@ const RENT_BANDS = [
   { key: '1000to1300', label: '$1,000 – $1,300 / mo' },
   { key: 'gt1300', label: 'Over $1,300 / mo' },
 ]
-
-const AREA_OPTIONS = [...new Set(LISTINGS.map((l) => l.area))].sort()
 
 function cloneFilters(f) {
   return {
@@ -80,6 +66,11 @@ function toggleListValue(list, value) {
 }
 
 function ListingsPage() {
+  const { listings, loading, error } = useListings()
+  const areaOptions = useMemo(
+    () => [...new Set(listings.map((l) => l.area))].sort(),
+    [listings],
+  )
   const [savedIds, setSavedIds] = useState(() => new Set())
   const [searchQuery, setSearchQuery] = useState('')
   const [appliedFilters, setAppliedFilters] = useState(() => cloneFilters(DEFAULT_FILTERS))
@@ -98,11 +89,11 @@ function ListingsPage() {
 
   const visibleListings = useMemo(
     () =>
-      LISTINGS.filter(
+      listings.filter(
         (l) =>
           listingMatchesQuery(l, searchQuery) && listingMatchesFilters(l, appliedFilters),
       ),
-    [searchQuery, appliedFilters],
+    [listings, searchQuery, appliedFilters],
   )
 
   function toggleSaved(id) {
@@ -124,6 +115,7 @@ function ListingsPage() {
   }
 
   const hasActiveFilters = filtersAreActive(appliedFilters)
+  const feedBlocked = loading || Boolean(error)
 
   return (
     <div className="listings-page">
@@ -142,6 +134,17 @@ function ListingsPage() {
           </Link>
         </div>
         <h1 className="listings-heading">Find Subleases</h1>
+
+        {loading ? (
+          <p className="listings-status" role="status">
+            Loading listings…
+          </p>
+        ) : null}
+        {error ? (
+          <p className="listings-status listings-status--error" role="alert">
+            {error}
+          </p>
+        ) : null}
 
         <div className="listings-toolbar">
           <label className="listings-search-wrap">
@@ -165,6 +168,7 @@ function ListingsPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               aria-controls="listings-feed"
+              disabled={feedBlocked}
             />
           </label>
           <button
@@ -180,6 +184,7 @@ function ListingsPage() {
               setDraftFilters(cloneFilters(appliedFilters))
               setFilterOpen(true)
             }}
+            disabled={feedBlocked}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path
@@ -193,17 +198,18 @@ function ListingsPage() {
         </div>
 
         <div className="listings-feed" id="listings-feed" role="list">
-          {visibleListings.length === 0 ? (
+          {!feedBlocked && visibleListings.length === 0 ? (
             <p className="listings-empty" role="status">
               No listings match your search or filters. Try adjusting keywords or clear filters
               and search again.
             </p>
-          ) : (
+          ) : null}
+          {!feedBlocked &&
             visibleListings.map((listing) => (
               <div key={listing.id} role="listitem">
                 <ListingCard
                   variant="feed"
-                  to="/listing"
+                  to={`/listing/${listing.id}`}
                   imageSeed={`subvet-${listing.id}`}
                   name={listing.name}
                   location={listing.location}
@@ -214,8 +220,7 @@ function ListingsPage() {
                   onFavoriteToggle={() => toggleSaved(listing.id)}
                 />
               </div>
-            ))
-          )}
+            ))}
         </div>
       </div>
 
@@ -261,7 +266,7 @@ function ListingsPage() {
               <fieldset className="listings-filter-fieldset">
                 <legend className="listings-filter-legend">Area</legend>
                 <div className="listings-filter-chips">
-                  {AREA_OPTIONS.map((area) => (
+                  {areaOptions.map((area) => (
                     <label key={area} className="listings-filter-chip">
                       <input
                         type="checkbox"
