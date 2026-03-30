@@ -28,6 +28,22 @@ The current prototype includes:
 
 ---
 
+## Run the project locally
+
+This repository’s runnable **front-end** lives in [`front-end/`](./front-end/). There is no separate back-end in this repo yet; follow the front-end README to install, develop, build, and lint.
+
+**Quick start:**
+
+```bash
+cd front-end
+npm install
+npm run dev
+```
+
+For production build, preview, lint, and notes on secrets, see [`front-end/README.md`](./front-end/README.md).
+
+---
+
 ## Team Members
 
 - Jack Chen — https://github.com/hc4893-lab  

@@ -17,6 +17,7 @@ body {
   min-height: 640px;
   background: white;
   border: 1px solid #ccc;
+  border-radius: 20px;
   padding: 16px;
   box-sizing: border-box;
 }
@@ -24,111 +25,6 @@ body {
 .title {
   font-size: 28px;
   margin: 0 0 16px 0;
-}
-
-.search-row {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-.search {
-  flex: 1;
-  padding: 10px;
-  box-sizing: border-box;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-}
-
-.filter-btn {
-  width: 40px;
-  border: 1px solid #ccc;
-  background: white;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.listing-card {
-  display: flex;
-  gap: 12px;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  padding: 12px;
-  margin-bottom: 14px;
-  background: #fafafa;
-  align-items: flex-start;
-}
-
-.image-box {
-  width: 70px;
-  height: 70px;
-  background: #d9d9d9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #555;
-  font-size: 12px;
-  border-radius: 8px;
-  flex-shrink: 0;
-}
-
-.listing-info {
-  flex: 1;
-}
-
-.listing-rating {
-  margin: 0 0 4px 0;
-  font-size: 12px;
-  color: #666;
-}
-
-.listing-name {
-  margin: 0 0 4px 0;
-  font-weight: bold;
-}
-
-.listing-location {
-  margin: 0 0 4px 0;
-  color: #666;
-  font-size: 14px;
-}
-
-.listing-details {
-  margin: 0 0 6px 0;
-  font-size: 13px;
-  color: #888;
-}
-
-.listing-price {
-  margin: 0;
-  font-weight: bold;
-}
-
-.save-icon {
-  font-size: 18px;
-  color: #666;
-}
-
-.card-link {
-  text-decoration: none;
-  color: inherit;
-  display: block;
-}
-.page {
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
-}
-
-.phone-frame {
-  width: 320px;
-  border: 1px solid #ccc;
-  border-radius: 20px;
-  padding: 16px;
-  background: #fff;
-}
-
-.title {
   text-align: center;
 }
 
@@ -177,6 +73,7 @@ body {
 .card-link {
   text-decoration: none;
   color: black;
+  display: block;
 }
 
 .bottom-nav {
@@ -189,6 +86,8 @@ body {
 
 .nav-item {
   font-size: 12px;
+  color: inherit;
+  text-decoration: none;
 }
 
 .active-nav {
@@ -196,13 +95,13 @@ body {
 }
 
 .listing-card {
+  display: flex;
+  gap: 12px;
   border: 1px solid #ccc;
   border-radius: 16px;
   padding: 10px;
   margin-bottom: 12px;
-  display: flex;
   align-items: center;
-  gap: 10px;
   background: #f9f9f9;
 }
 
@@ -214,20 +113,43 @@ body {
   align-items: center;
   justify-content: center;
   font-size: 12px;
+  border-radius: 8px;
+  flex-shrink: 0;
 }
 
 .listing-info {
   flex: 1;
 }
 
+.listing-rating {
+  margin: 0 0 4px 0;
+  font-size: 12px;
+  color: #666;
+}
+
 .listing-name {
+  margin: 0 0 4px 0;
   font-weight: bold;
 }
 
+.listing-location {
+  margin: 0 0 4px 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.listing-details {
+  margin: 0 0 6px 0;
+  font-size: 13px;
+  color: #888;
+}
+
 .listing-price {
+  margin: 0;
   font-weight: bold;
 }
 
 .save-icon {
   font-size: 18px;
+  color: #666;
 }
