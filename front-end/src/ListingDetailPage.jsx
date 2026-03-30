@@ -15,8 +15,11 @@ function ListingDetailInner({ id }) {
   const [loading, setLoading] = useState(true)
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
   const [mapPickerOpen, setMapPickerOpen] = useState(false)
+  const [actionDialog, setActionDialog] = useState(null)
   const mapTitleId = useId()
+  const actionDialogTitleId = useId()
   const mapPrimaryActionRef = useRef(null)
+  const actionOkRef = useRef(null)
 
   useEffect(() => {
     let cancelled = false
@@ -45,12 +48,24 @@ function ListingDetailInner({ id }) {
   useEffect(() => {
     if (!mapPickerOpen) return
     mapPrimaryActionRef.current?.focus()
+  }, [mapPickerOpen])
+
+  useEffect(() => {
+    if (!actionDialog) return
+    actionOkRef.current?.focus()
+  }, [actionDialog])
+
+  useEffect(() => {
+    if (!mapPickerOpen && !actionDialog) return
     function onKey(e) {
-      if (e.key === 'Escape') setMapPickerOpen(false)
+      if (e.key === 'Escape') {
+        setMapPickerOpen(false)
+        setActionDialog(null)
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [mapPickerOpen])
+  }, [mapPickerOpen, actionDialog])
 
   function openMaps(provider) {
     const q = encodeURIComponent(listing?.mapQuery ?? 'New York, NY')
@@ -157,10 +172,18 @@ function ListingDetailInner({ id }) {
             <p className="listing-detail-price-value">{listing.price}</p>
           </div>
           <div className="listing-detail-actions">
-            <button type="button" className="listing-detail-btn listing-detail-btn--ghost">
+            <button
+              type="button"
+              className="listing-detail-btn listing-detail-btn--ghost"
+              onClick={() => setActionDialog('contact')}
+            >
               Contact
             </button>
-            <button type="button" className="listing-detail-btn listing-detail-btn--primary">
+            <button
+              type="button"
+              className="listing-detail-btn listing-detail-btn--primary"
+              onClick={() => setActionDialog('apply')}
+            >
               Apply now
             </button>
           </div>
@@ -211,6 +234,39 @@ function ListingDetailInner({ id }) {
               onClick={() => setMapPickerOpen(false)}
             >
               Cancel
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {actionDialog ? (
+        <div
+          className="listing-detail-map-overlay"
+          role="presentation"
+          onClick={() => setActionDialog(null)}
+        >
+          <div
+            className="listing-detail-map-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={actionDialogTitleId}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id={actionDialogTitleId} className="listing-detail-map-dialog-title">
+              {actionDialog === 'apply' ? 'Applied!' : 'Contact request sent'}
+            </h2>
+            <p className="listing-detail-map-dialog-text">
+              {actionDialog === 'apply'
+                ? 'Your application was submitted for this sublease.'
+                : 'Your contact request was sent to the lister. They may reply through SubVet.'}
+            </p>
+            <button
+              ref={actionOkRef}
+              type="button"
+              className="listing-detail-btn listing-detail-btn--primary listing-detail-action-ok"
+              onClick={() => setActionDialog(null)}
+            >
+              OK
             </button>
           </div>
         </div>
