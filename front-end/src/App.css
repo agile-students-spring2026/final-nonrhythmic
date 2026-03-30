@@ -132,6 +132,50 @@ body {
   text-align: center;
 }
 
+.profile-top-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.profile-back-btn {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2.5rem;
+  height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: 1px solid #d4d4d4;
+  background: #fafafa;
+  color: #0a0a0a;
+  text-decoration: none;
+  transition:
+    background 0.15s ease,
+    transform 0.1s ease;
+}
+
+.profile-back-btn:hover {
+  background: #fff;
+}
+
+.profile-back-btn:active {
+  transform: translateY(-50%) scale(0.96);
+}
+
+.profile-page-title {
+  margin: 0;
+  padding: 0 2.75rem;
+  font-size: 1.35rem;
+  line-height: 1.2;
+}
+
 .profile-header {
   text-align: center;
   margin-bottom: 20px;
@@ -181,14 +225,16 @@ body {
 
 .bottom-nav {
   display: flex;
-  justify-content: space-around;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 0.75rem;
   margin-top: 20px;
   border-top: 1px solid #ccc;
   padding-top: 10px;
 }
 
 .nav-item {
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .active-nav {

@@ -1,0 +1,222 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
+
+.tenants-page {
+  --tp-bg: #ebebeb;
+  --tp-surface: #ffffff;
+  --tp-ink: #0a0a0a;
+  --tp-muted: #5c5c5c;
+  --tp-faint: #8a8a8a;
+  --tp-line: #d4d4d4;
+  --tp-line-soft: #e8e8e8;
+  --tp-font: 'Outfit', system-ui, sans-serif;
+
+  min-height: 100svh;
+  margin: 0;
+  padding: 1.25rem 1rem 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: var(--tp-bg);
+  font-family: var(--tp-font);
+}
+
+.tenants-page * {
+  box-sizing: border-box;
+}
+
+.tenants-shell {
+  width: 100%;
+  max-width: 390px;
+  max-height: calc(100svh - 2.75rem);
+  min-height: min(560px, calc(100svh - 2.75rem));
+  background: var(--tp-surface);
+  border: 1px solid var(--tp-line);
+  border-radius: 28px;
+  padding: 1rem 1rem 1rem;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 24px 48px -32px rgba(0, 0, 0, 0.28);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  text-align: left;
+}
+
+.tenants-top {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.tenants-back {
+  grid-row: 1;
+  grid-column: 1;
+  z-index: 1;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: 1px solid var(--tp-line-soft);
+  background: #fafafa;
+  color: var(--tp-ink);
+  text-decoration: none;
+  transition:
+    background 0.15s ease,
+    transform 0.1s ease;
+}
+
+.tenants-back:hover {
+  background: #fff;
+}
+
+.tenants-back:active {
+  transform: scale(0.96);
+}
+
+.tenants-heading {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--tp-ink);
+  text-align: center;
+  grid-column: 1 / -1;
+  grid-row: 1;
+  pointer-events: none;
+  padding: 0 2.75rem;
+}
+
+.tenants-location-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin-bottom: 1rem;
+}
+
+.tenants-location-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--tp-faint);
+}
+
+.tenants-location-input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 0.875rem;
+  font: inherit;
+  font-size: 0.9375rem;
+  color: var(--tp-ink);
+  border: 1px solid var(--tp-line-soft);
+  border-radius: 14px;
+  background: #f7f7f7;
+  outline: none;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.tenants-location-input:focus {
+  background: #fff;
+  border-color: var(--tp-ink);
+}
+
+.tenants-location-input::placeholder {
+  color: var(--tp-faint);
+}
+
+.tenants-feed {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-bottom: 0.375rem;
+}
+
+.tenants-empty {
+  margin: 1.25rem 0.25rem 0;
+  text-align: center;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--tp-muted);
+}
+
+.tenants-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  border-radius: 18px;
+}
+
+.tenants-card-link:active {
+  opacity: 0.96;
+}
+
+.tenants-card {
+  display: flex;
+  gap: 0.875rem;
+  padding: 0.875rem;
+  margin: 0;
+  border: 1px solid var(--tp-line-soft);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+}
+
+.tenants-card-avatar {
+  flex-shrink: 0;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #e8e8e8;
+}
+
+.tenants-card-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.tenants-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.tenants-card-name {
+  margin: 0 0 0.375rem;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--tp-ink);
+}
+
+.tenants-card-line {
+  margin: 0 0 0.25rem;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: var(--tp-muted);
+}
+
+.tenants-card-line:last-child {
+  margin-bottom: 0;
+}
+
+.tenants-card-k {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tp-faint);
+  margin-bottom: 0.125rem;
+}

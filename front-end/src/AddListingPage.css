@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
+
+.add-listing-page {
+  --ap-bg: #ebebeb;
+  --ap-surface: #ffffff;
+  --ap-ink: #0a0a0a;
+  --ap-muted: #5c5c5c;
+  --ap-line: #d4d4d4;
+  --ap-line-soft: #e8e8e8;
+  --ap-font: 'Outfit', system-ui, sans-serif;
+
+  min-height: 100svh;
+  margin: 0;
+  padding: 1.25rem 1rem 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: var(--ap-bg);
+  font-family: var(--ap-font);
+}
+
+.add-listing-page * {
+  box-sizing: border-box;
+}
+
+.add-listing-shell {
+  position: relative;
+  width: 100%;
+  max-width: 390px;
+  padding: 1.35rem 1.1rem 1.25rem;
+  background: var(--ap-surface);
+  border: 1px solid var(--ap-line);
+  border-radius: 28px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 24px 48px -32px rgba(0, 0, 0, 0.28);
+  text-align: left;
+}
+
+.add-listing-back {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: 1px solid var(--ap-line-soft);
+  background: #fafafa;
+  color: var(--ap-ink);
+  text-decoration: none;
+}
+
+.add-listing-title {
+  margin: 0 0 0.75rem;
+  padding: 0 2.5rem 0 2.75rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--ap-ink);
+}
+
+.add-listing-text {
+  margin: 0 0 1.25rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--ap-muted);
+}
+
+.add-listing-cta {
+  display: inline-flex;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ap-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
