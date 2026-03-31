@@ -54,6 +54,7 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  cursor: zoom-in;
 }
 
 .listing-detail-back {
@@ -338,4 +339,131 @@
 
 .listing-detail-shell--center .bottom-nav {
   margin-inline: 0;
+}
+
+
+.listing-detail-carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid var(--lp-line);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--lp-ink);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.listing-detail-carousel-btn--left {
+  left: 0.75rem;
+}
+
+.listing-detail-carousel-btn--right {
+  right: 0.75rem;
+}
+
+.listing-detail-carousel-btn:active {
+  transform: translateY(-50%) scale(0.97);
+}
+
+
+.listing-detail-dots {
+  position: absolute;
+  left: 50%;
+  bottom: 0.75rem;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.4rem;
+  z-index: 1;
+}
+
+.listing-detail-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.65);
+  cursor: pointer;
+  padding: 0;
+}
+
+.listing-detail-dot--active {
+  background: white;
+}
+
+.listing-detail-zoom-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.82);
+}
+
+.listing-detail-zoom-dialog {
+  position: relative;
+  width: min(92vw, 900px);
+  max-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.listing-detail-zoom-image {
+  width: 100%;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 16px;
+  display: block;
+  background: #111;
+}
+
+.listing-detail-zoom-close {
+  position: absolute;
+  top: -0.75rem;
+  right: -0.25rem;
+  z-index: 2;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #111;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.listing-detail-zoom-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #111;
+  font-size: 1.75rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.listing-detail-zoom-btn--left {
+  left: 0.75rem;
+}
+
+.listing-detail-zoom-btn--right {
+  right: 0.75rem;
 }

@@ -20,6 +20,8 @@ function ListingDetailInner({ id }) {
   const actionDialogTitleId = useId()
   const mapPrimaryActionRef = useRef(null)
   const actionOkRef = useRef(null)
+  const [currentImage, setCurrentImage] = useState(0)
+  const [imageZoomOpen, setImageZoomOpen] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -104,9 +106,17 @@ function ListingDetailInner({ id }) {
 
   const reviewCount = 12 + (listing.id % 40)
 
+  const images = [
+    'https://picsum.photos/id/1018/960/600',
+    'https://picsum.photos/id/1015/960/600',
+    'https://picsum.photos/id/1019/960/600',
+  ]
+
   return (
     <div className="listing-detail-page">
       <article className="listing-detail-shell">
+        <div className="listing-detail-hero">
+
         <div className="listing-detail-hero">
           <Link to="/listings" className="listing-detail-back" aria-label="Back to listings">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -119,12 +129,55 @@ function ListingDetailInner({ id }) {
               />
             </svg>
           </Link>
+
           <img
-            src={`https://picsum.photos/seed/subvet-detail-${listing.id}/960/600`}
+            src={images[currentImage]}
             alt=""
             width={960}
             height={600}
+            onClick={() => setImageZoomOpen(true)}
+            className="listing-detail-hero-image"
           />
+
+          <button
+            type="button"
+            className="listing-detail-carousel-btn listing-detail-carousel-btn--left"
+            onClick={() =>
+              setCurrentImage((prev) => (prev === 0 ? images.length - 1 : prev - 1))
+            }
+            aria-label="Previous image"
+          >
+            ‹
+          </button>
+
+          <button
+            type="button"
+            className="listing-detail-carousel-btn listing-detail-carousel-btn--right"
+            onClick={() =>
+              setCurrentImage((prev) => (prev === images.length - 1 ? 0 : prev + 1))
+            }
+            aria-label="Next image"
+          >
+            ›
+          </button>
+          <div className="listing-detail-dots">
+          {images.map((_, index) => (
+            <button
+              key={index}
+              type="button"
+              className={
+                index === currentImage
+                  ? 'listing-detail-dot listing-detail-dot--active'
+                  : 'listing-detail-dot'
+              }
+              onClick={() => setCurrentImage(index)}
+              aria-label={`Go to image ${index + 1}`}
+            />
+          ))}
+        </div>
+        </div>
+        
+
         </div>
 
         <div className="listing-detail-body">
@@ -238,7 +291,55 @@ function ListingDetailInner({ id }) {
           </div>
         </div>
       ) : null}
+      {imageZoomOpen ? (
+        <div
+          className="listing-detail-zoom-overlay"
+          role="presentation"
+          onClick={() => setImageZoomOpen(false)}
+        >
+          <div
+            className="listing-detail-zoom-dialog"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="listing-detail-zoom-close"
+              onClick={() => setImageZoomOpen(false)}
+              aria-label="Close image preview"
+            >
+              ×
+            </button>
 
+            <button
+              type="button"
+              className="listing-detail-zoom-btn listing-detail-zoom-btn--left"
+              onClick={() =>
+                setCurrentImage((prev) => (prev === 0 ? images.length - 1 : prev - 1))
+              }
+              aria-label="Previous image"
+            >
+              ‹
+            </button>
+
+            <img
+              src={images[currentImage]}
+              alt=""
+              className="listing-detail-zoom-image"
+            />
+
+            <button
+              type="button"
+              className="listing-detail-zoom-btn listing-detail-zoom-btn--right"
+              onClick={() =>
+                setCurrentImage((prev) => (prev === images.length - 1 ? 0 : prev + 1))
+              }
+              aria-label="Next image"
+            >
+              ›
+            </button>
+          </div>
+        </div>
+      ) : null}
       {actionDialog ? (
         <div
           className="listing-detail-map-overlay"
