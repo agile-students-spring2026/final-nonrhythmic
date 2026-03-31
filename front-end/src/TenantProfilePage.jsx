@@ -1,26 +1,11 @@
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { getTenantById } from './data/tenants'
 import MainNav from './MainNav'
+import { useTenants } from './hooks/useTenants'
+import { normalizeDummyUser } from './tenants/normalizeDummyUser'
 import './TenantProfilePage.css'
 
-function TenantProfilePage() {
-  const { tenantId } = useParams()
-  const tenant = tenantId ? getTenantById(tenantId) : undefined
-
-  if (!tenant) {
-    return (
-      <div className="tenant-profile-page">
-        <div className="tenant-profile-shell tenant-profile-shell--narrow">
-          <p className="tenant-profile-missing">That tenant profile is not available.</p>
-          <Link to="/tenants" className="tenant-profile-back-link">
-            Back to intern tenants
-          </Link>
-          <MainNav active="tenants" />
-        </div>
-      </div>
-    )
-  }
-
+function TenantProfileDetail({ tenant }) {
   return (
     <div className="tenant-profile-page">
       <article className="tenant-profile-shell">
@@ -96,6 +81,111 @@ function TenantProfilePage() {
         </footer>
         <MainNav active="tenants" />
       </article>
+    </div>
+  )
+}
+
+function TenantProfileFetchById({ id }) {
+  const [state, setState] = useState(() => ({ status: 'loading', tenant: null }))
+
+  useEffect(() => {
+    let cancelled = false
+    fetch(
+      `https://dummyjson.com/users/${id}?select=id,firstName,lastName,age,company,address,university`,
+    )
+      .then((r) => (r.ok ? r.json() : null))
+      .then((u) => {
+        if (cancelled) return
+        const t = u ? normalizeDummyUser(u) : null
+        setState({ status: t ? 'ok' : 'missing', tenant: t })
+      })
+      .catch(() => {
+        if (!cancelled) setState({ status: 'missing', tenant: null })
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [id])
+
+  if (state.status === 'loading') {
+    return (
+      <div className="tenant-profile-page">
+        <div className="tenant-profile-shell tenant-profile-shell--narrow">
+          <p className="tenant-profile-missing">Loading tenant…</p>
+          <MainNav active="tenants" />
+        </div>
+      </div>
+    )
+  }
+
+  if (!state.tenant) {
+    return (
+      <div className="tenant-profile-page">
+        <div className="tenant-profile-shell tenant-profile-shell--narrow">
+          <p className="tenant-profile-missing">That tenant profile is not available.</p>
+          <Link to="/tenants" className="tenant-profile-back-link">
+            Back to intern tenants
+          </Link>
+          <MainNav active="tenants" />
+        </div>
+      </div>
+    )
+  }
+
+  return <TenantProfileDetail tenant={state.tenant} />
+}
+
+function TenantProfilePage() {
+  const { tenantId } = useParams()
+  const { tenants, loading, error } = useTenants()
+
+  const fromList = useMemo(
+    () => (tenantId ? tenants.find((t) => t.id === tenantId) : undefined),
+    [tenants, tenantId],
+  )
+
+  if (loading) {
+    return (
+      <div className="tenant-profile-page">
+        <div className="tenant-profile-shell tenant-profile-shell--narrow">
+          <p className="tenant-profile-missing">Loading tenant…</p>
+          <MainNav active="tenants" />
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="tenant-profile-page">
+        <div className="tenant-profile-shell tenant-profile-shell--narrow">
+          <p className="tenant-profile-missing">{error}</p>
+          <Link to="/tenants" className="tenant-profile-back-link">
+            Back to intern tenants
+          </Link>
+          <MainNav active="tenants" />
+        </div>
+      </div>
+    )
+  }
+
+  if (fromList) {
+    return <TenantProfileDetail tenant={fromList} />
+  }
+
+  if (tenantId && /^\d+$/.test(tenantId)) {
+    return <TenantProfileFetchById key={tenantId} id={tenantId} />
+  }
+
+  return (
+    <div className="tenant-profile-page">
+      <div className="tenant-profile-shell tenant-profile-shell--narrow">
+        <p className="tenant-profile-missing">That tenant profile is not available.</p>
+        <Link to="/tenants" className="tenant-profile-back-link">
+          Back to intern tenants
+        </Link>
+        <MainNav active="tenants" />
+      </div>
     </div>
   )
 }

@@ -47,7 +47,7 @@ npm run lint
 
 ## Mock listing data
 
-Sublease listings are loaded at runtime from the public [DummyJSON](https://dummyjson.com/) API (no key). You need network access for listings, profile “My listings,” and listing detail. Tenant profiles still use local mock data in `src/data/tenants.js` until a tenant API exists.
+Sublease listings and tenant directory rows are loaded at runtime from the public [DummyJSON](https://dummyjson.com/) API (no key). You need network access for listings, profile “My listings,” listing detail, tenant list and detail, and the profile photo ([Picsum](https://picsum.photos/) placeholder). Tenant cards and profile copy are normalized from DummyJSON `users` responses in the client; avatars use Picsum with a seeded URL per tenant.
 
 All main screens use the same bottom bar (`MainNav`): Home, Subleases, Listings feed, Listing detail, Tenants list, Tenant profile, Add listing, and Profile.
 

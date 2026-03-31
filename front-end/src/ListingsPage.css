@@ -385,8 +385,9 @@
   text-align: center;
 }
 
-/* Feed card — only inside listings page */
-.listings-page .listing-card--feed {
+/* Feed card — listings + profile */
+.listings-page .listing-card--feed,
+.profile-page .listing-card--feed {
   margin: 0;
   padding: 0.75rem;
   gap: 0.375rem;
@@ -399,7 +400,8 @@
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
 }
 
-.listings-page .listing-card__tap {
+.listings-page .listing-card__tap,
+.profile-page .listing-card__tap {
   flex: 1;
   min-width: 0;
   display: flex;
@@ -412,11 +414,13 @@
   transition: opacity 0.12s ease;
 }
 
-.listings-page .listing-card__tap:active {
+.listings-page .listing-card__tap:active,
+.profile-page .listing-card__tap:active {
   opacity: 0.92;
 }
 
-.listings-page .listing-card__favorite {
+.listings-page .listing-card__favorite,
+.profile-page .listing-card__favorite {
   flex-shrink: 0;
   align-self: flex-end;
   width: 2.25rem;
@@ -439,24 +443,29 @@
     transform 0.1s ease;
 }
 
-.listings-page .listing-card__favorite:hover {
+.listings-page .listing-card__favorite:hover,
+.profile-page .listing-card__favorite:hover {
   color: var(--lp-ink);
 }
 
-.listings-page .listing-card__favorite--on {
+.listings-page .listing-card__favorite--on,
+.profile-page .listing-card__favorite--on {
   color: var(--lp-ink);
 }
 
-.listings-page .listing-card__favorite:active {
+.listings-page .listing-card__favorite:active,
+.profile-page .listing-card__favorite:active {
   transform: scale(0.92);
 }
 
-.listings-page .listing-card--feed:focus-within {
+.listings-page .listing-card--feed:focus-within,
+.profile-page .listing-card--feed:focus-within {
   outline: 2px solid var(--lp-ink);
   outline-offset: 2px;
 }
 
-.listings-page .listing-card__thumb {
+.listings-page .listing-card__thumb,
+.profile-page .listing-card__thumb {
   width: 4.75rem;
   height: 4.75rem;
   flex-shrink: 0;
@@ -465,14 +474,16 @@
   background: #e8e8e8;
 }
 
-.listings-page .listing-card__thumb img {
+.listings-page .listing-card__thumb img,
+.profile-page .listing-card__thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
 
-.listings-page .listing-card--feed .listing-info {
+.listings-page .listing-card--feed .listing-info,
+.profile-page .listing-card--feed .listing-info {
   flex: 1;
   min-width: 0;
   display: flex;
@@ -480,14 +491,16 @@
   gap: 0.125rem;
 }
 
-.listings-page .listing-card--feed .listing-top {
+.listings-page .listing-card--feed .listing-top,
+.profile-page .listing-card--feed .listing-top {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.5rem;
 }
 
-.listings-page .listing-card--feed .listing-name {
+.listings-page .listing-card--feed .listing-name,
+.profile-page .listing-card--feed .listing-name {
   margin: 0;
   font-size: 0.9375rem;
   font-weight: 600;
@@ -496,7 +509,8 @@
   line-height: 1.25;
 }
 
-.listings-page .listing-card--feed .listing-rating {
+.listings-page .listing-card--feed .listing-rating,
+.profile-page .listing-card--feed .listing-rating {
   margin: 0;
   font-size: 0.75rem;
   font-weight: 500;
@@ -504,20 +518,23 @@
   white-space: nowrap;
 }
 
-.listings-page .listing-card--feed .listing-location {
+.listings-page .listing-card--feed .listing-location,
+.profile-page .listing-card--feed .listing-location {
   margin: 0;
   font-size: 0.8125rem;
   color: var(--lp-muted);
   line-height: 1.35;
 }
 
-.listings-page .listing-card--feed .listing-details {
+.listings-page .listing-card--feed .listing-details,
+.profile-page .listing-card--feed .listing-details {
   margin: 0;
   font-size: 0.75rem;
   color: var(--lp-faint);
 }
 
-.listings-page .listing-card--feed .listing-price {
+.listings-page .listing-card--feed .listing-price,
+.profile-page .listing-card--feed .listing-price {
   margin: 0.25rem 0 0;
   font-size: 0.875rem;
   font-weight: 600;
@@ -525,7 +542,8 @@
   color: var(--lp-ink);
 }
 
-.listings-page .bottom-nav {
+.listings-page .bottom-nav,
+.profile-page .bottom-nav {
   flex-shrink: 0;
   margin-top: 0.5rem;
   border-color: var(--lp-line-soft);
