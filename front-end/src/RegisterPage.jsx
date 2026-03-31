@@ -51,6 +51,16 @@ function RegisterPage() {
               placeholder="At least 8 characters"
             />
           </label>
+          <label className="auth-field">
+            <span className="auth-label">Confirm password</span>
+            <input
+              className="auth-input"
+              type="password"
+              name="confirmPassword"
+              autoComplete="new-password"
+              placeholder="Re-enter password"
+            />
+          </label>
           <button type="submit" className="auth-submit">
             Create account
           </button>

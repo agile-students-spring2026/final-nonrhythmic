@@ -10,7 +10,7 @@
   --au-line-soft: #e8e8e8;
   --au-font: 'Outfit', system-ui, sans-serif;
 
-  min-height: 100svh;
+  min-height: 100vh;
   margin: 0;
   padding: 1.25rem 1rem 2rem;
   display: flex;
@@ -27,6 +27,7 @@
 .auth-shell {
   width: 100%;
   max-width: 390px;
+  height: calc(100vh - 2.75rem);
   background: var(--au-surface);
   border: 1px solid var(--au-line);
   border-radius: 28px;
@@ -35,6 +36,9 @@
     0 1px 0 rgba(255, 255, 255, 0.9) inset,
     0 24px 48px -32px rgba(0, 0, 0, 0.28);
   text-align: left;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .auth-top {
