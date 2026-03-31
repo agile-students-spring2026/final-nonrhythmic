@@ -36,7 +36,7 @@ function HomePage() {
           </Link>
           <Link to="/add-listing" className="home-tile home-tile--muted">
             <span className="home-tile-label">Add listing</span>
-            <span className="home-tile-desc">Coming soon</span>
+            <span className="home-tile-desc">Post a sublease or a tenant application</span>
           </Link>
         </nav>
         <MainNav active="home" />

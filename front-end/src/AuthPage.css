@@ -82,13 +82,6 @@
   padding: 0 2.75rem;
 }
 
-.auth-lead {
-  margin: 0 0 1rem;
-  font-size: 0.875rem;
-  line-height: 1.45;
-  color: var(--au-muted);
-}
-
 .auth-form {
   display: flex;
   flex-direction: column;

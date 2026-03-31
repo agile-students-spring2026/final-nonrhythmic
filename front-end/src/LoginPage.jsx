@@ -21,11 +21,6 @@ function LoginPage() {
           <h1 className="auth-title">Sign in</h1>
         </header>
 
-        <p className="auth-lead">
-          This is a UI placeholder for sprint 1. Authentication will be wired to the back-end in a
-          later sprint.
-        </p>
-
         <form
           className="auth-form"
           onSubmit={(e) => {
