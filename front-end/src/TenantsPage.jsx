@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { TENANTS } from './data/tenants'
 import MainNav from './MainNav'
+import { useTenants } from './hooks/useTenants'
 import './TenantsPage.css'
 
 function tenantMatchesLocation(tenant, rawQuery) {
@@ -15,10 +15,11 @@ function tenantMatchesLocation(tenant, rawQuery) {
 
 function TenantsPage() {
   const [locationQuery, setLocationQuery] = useState('')
+  const { tenants, loading, error } = useTenants()
 
   const visible = useMemo(
-    () => TENANTS.filter((t) => tenantMatchesLocation(t, locationQuery)),
-    [locationQuery],
+    () => tenants.filter((t) => tenantMatchesLocation(t, locationQuery)),
+    [tenants, locationQuery],
   )
 
   return (
@@ -49,11 +50,22 @@ function TenantsPage() {
             value={locationQuery}
             onChange={(e) => setLocationQuery(e.target.value)}
             aria-controls="tenants-feed"
+            disabled={loading || Boolean(error)}
           />
         </label>
 
+        {error ? (
+          <p className="tenants-empty" role="alert">
+            {error}
+          </p>
+        ) : null}
+
         <div className="tenants-feed" id="tenants-feed" role="list">
-          {visible.length === 0 ? (
+          {loading ? (
+            <p className="tenants-empty" role="status">
+              Loading tenants…
+            </p>
+          ) : visible.length === 0 ? (
             <p className="tenants-empty" role="status">
               No tenants match that location. Try another area or clear the field.
             </p>
