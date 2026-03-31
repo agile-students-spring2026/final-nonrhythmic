@@ -1,0 +1,221 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
+
+.profile-page {
+  --lp-bg: #ebebeb;
+  --lp-surface: #ffffff;
+  --lp-ink: #0a0a0a;
+  --lp-muted: #5c5c5c;
+  --lp-faint: #8a8a8a;
+  --lp-line: #d4d4d4;
+  --lp-line-soft: #e8e8e8;
+  --lp-font: 'Outfit', system-ui, sans-serif;
+
+  min-height: 100svh;
+  margin: 0;
+  padding: 1.25rem 1rem 2rem;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: var(--lp-bg);
+  font-family: var(--lp-font);
+}
+
+.profile-page * {
+  box-sizing: border-box;
+}
+
+.profile-shell {
+  width: 100%;
+  max-width: 390px;
+  max-height: calc(100svh - 2.75rem);
+  min-height: min(560px, calc(100svh - 2.75rem));
+  background: var(--lp-surface);
+  border: 1px solid var(--lp-line);
+  border-radius: 28px;
+  padding: 1rem 1rem 0.75rem;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 24px 48px -32px rgba(0, 0, 0, 0.28);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  text-align: left;
+}
+
+.profile-top {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  flex-shrink: 0;
+}
+
+.profile-back {
+  grid-row: 1;
+  grid-column: 1;
+  z-index: 1;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: 1px solid var(--lp-line-soft);
+  background: #fafafa;
+  color: var(--lp-ink);
+  text-decoration: none;
+  transition:
+    background 0.15s ease,
+    transform 0.1s ease;
+}
+
+.profile-back:hover {
+  background: #fff;
+}
+
+.profile-back:active {
+  transform: scale(0.96);
+}
+
+.profile-heading {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--lp-ink);
+  text-align: center;
+  grid-column: 1 / -1;
+  grid-row: 1;
+  pointer-events: none;
+  padding: 0 2.75rem;
+}
+
+.profile-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+  padding-bottom: 0.5rem;
+}
+
+.profile-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+/* Placeholder ring — commit 2 adds Picsum <img> inside */
+.profile-avatar {
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid var(--lp-line-soft);
+  background: linear-gradient(145deg, #f0f0f0 0%, #e4e4e4 100%);
+  flex-shrink: 0;
+}
+
+.profile-username {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--lp-ink);
+}
+
+.profile-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.profile-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.profile-section-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--lp-ink);
+  letter-spacing: -0.02em;
+}
+
+.profile-edit-btn {
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--lp-muted);
+  cursor: pointer;
+  padding: 0.25rem 0.375rem;
+  border-radius: 8px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.profile-edit-btn:hover {
+  color: var(--lp-ink);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.profile-textarea {
+  width: 100%;
+  min-height: 5.5rem;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid var(--lp-line-soft);
+  border-radius: 14px;
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--lp-ink);
+  background: #fafafa;
+  resize: vertical;
+}
+
+.profile-textarea:focus {
+  outline: 2px solid var(--lp-ink);
+  outline-offset: 1px;
+  background: #fff;
+}
+
+.profile-info-box {
+  border: 1px solid var(--lp-line-soft);
+  border-radius: 14px;
+  padding: 0.75rem 0.875rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--lp-muted);
+  background: #fafafa;
+}
+
+.profile-listings-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--lp-ink);
+}
+
+.profile-listings-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.profile-listings-hint {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--lp-muted);
+}

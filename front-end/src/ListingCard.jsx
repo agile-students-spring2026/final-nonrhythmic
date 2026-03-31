@@ -11,6 +11,7 @@ function ListingCard({
   onFavoriteToggle,
   rating = '4.5',
   details = '2 bed · 1 bath',
+  showFavorite = true,
 }) {
   const rootClass =
     variant === 'feed' ? 'listing-card listing-card--feed' : 'listing-card'
@@ -44,17 +45,19 @@ function ListingCard({
             <p className="listing-price">{price}</p>
           </div>
         </Link>
-        <button
-          type="button"
-          className={
-            saved ? 'listing-card__favorite listing-card__favorite--on' : 'listing-card__favorite'
-          }
-          onClick={onFavoriteToggle}
-          aria-pressed={saved}
-          aria-label={saved ? 'Remove from saved' : 'Save listing'}
-        >
-          {saved ? '♥' : '♡'}
-        </button>
+        {showFavorite ? (
+          <button
+            type="button"
+            className={
+              saved ? 'listing-card__favorite listing-card__favorite--on' : 'listing-card__favorite'
+            }
+            onClick={onFavoriteToggle}
+            aria-pressed={saved}
+            aria-label={saved ? 'Remove from saved' : 'Save listing'}
+          >
+            {saved ? '♥' : '♡'}
+          </button>
+        ) : null}
       </div>
     )
   }
