@@ -33,7 +33,14 @@ function ProfilePage() {
 
         <div className="profile-body">
           <div className="profile-hero">
-            <div className="profile-avatar" aria-hidden="true" />
+            <div className="profile-avatar">
+              <img
+                src="https://picsum.photos/seed/subvet-profile/120/120"
+                alt=""
+                width={120}
+                height={120}
+              />
+            </div>
             <h2 className="profile-username">Username</h2>
           </div>
 
