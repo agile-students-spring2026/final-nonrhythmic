@@ -51,9 +51,7 @@ Sublease listings are loaded at runtime from the public [DummyJSON](https://dumm
 
 All main screens use the same bottom bar (`MainNav`): Home, Subleases, Listings feed, Listing detail, Tenants list, Tenant profile, Add listing, and Profile.
 
-## Auth screens (UI only)
-
-If the app will eventually support login/registration, the UI placeholders are available at:
+## Sign in and registration
 
 - `/login`
 - `/register`

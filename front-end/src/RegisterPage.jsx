@@ -21,11 +21,6 @@ function RegisterPage() {
           <h1 className="auth-title">Create account</h1>
         </header>
 
-        <p className="auth-lead">
-          This is a UI placeholder for sprint 1. Registration will be wired to the back-end in a
-          later sprint.
-        </p>
-
         <form
           className="auth-form"
           onSubmit={(e) => {

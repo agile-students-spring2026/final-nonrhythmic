@@ -309,6 +309,12 @@
   text-underline-offset: 3px;
 }
 
+.listing-detail-action-ok {
+  width: 100%;
+  justify-content: center;
+  margin-top: 0.25rem;
+}
+
 .listing-detail-shell--center {
   padding: 1.25rem 1rem 1rem;
   text-align: center;
