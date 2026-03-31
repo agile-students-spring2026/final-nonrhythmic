@@ -11,6 +11,7 @@ import ProfilePage from './ProfilePage'
 import AddListingPage from './AddListingPage'
 import LoginPage from './LoginPage'
 import RegisterPage from './RegisterPage'
+import SavedPage from './SavedPage'
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
             <Route path="/tenant/:tenantId" element={<TenantProfilePage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/add-listing" element={<AddListingPage />} />
+            <Route path="/saved" element={<SavedPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
           </Routes>

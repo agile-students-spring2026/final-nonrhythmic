@@ -9,7 +9,7 @@
   --ap-line-soft: #e8e8e8;
   --ap-font: 'Outfit', system-ui, sans-serif;
 
-  min-height: 100svh;
+  min-height: 100vh;
   margin: 0;
   padding: 1.25rem 1rem 2rem;
   display: flex;
@@ -33,7 +33,7 @@
   position: relative;
   width: 100%;
   max-width: 390px;
-  max-height: calc(100svh - 2.5rem);
+  height: calc(100vh - 2.75rem);
   padding: 1.35rem 1.1rem 1rem;
   background: var(--ap-surface);
   border: 1px solid var(--ap-line);

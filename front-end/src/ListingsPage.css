@@ -10,7 +10,7 @@
   --lp-line-soft: #e8e8e8;
   --lp-font: 'Outfit', system-ui, sans-serif;
 
-  min-height: 100svh;
+  min-height: 100vh;
   margin: 0;
   padding: 1.25rem 1rem 2rem;
   box-sizing: border-box;
@@ -28,8 +28,7 @@
 .listings-shell {
   width: 100%;
   max-width: 390px;
-  max-height: calc(100svh - 2.75rem);
-  min-height: min(560px, calc(100svh - 2.75rem));
+  height: calc(100vh - 2.75rem);
   text-align: left;
   background: var(--lp-surface);
   border: 1px solid var(--lp-line);
