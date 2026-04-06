@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ListingsContext } from './listingsContext'
-import { normalizeProduct } from '../listings/normalizeProduct'
+// import { normalizeProduct } from '../listings/normalizeProduct'
 
-const PRODUCTS_URL = 'https://dummyjson.com/products?limit=40'
+// const PRODUCTS_URL = 'https://dummyjson.com/products?limit=40'
+const LISTINGS_URL = 'http://localhost:3000/api/listings'
 
 export function ListingsProvider({ children }) {
   const [raw, setRaw] = useState([])
@@ -11,13 +12,17 @@ export function ListingsProvider({ children }) {
 
   useEffect(() => {
     let cancelled = false
-    fetch(PRODUCTS_URL)
+    // fetch(PRODUCTS_URL)
+    fetch(LISTINGS_URL)
       .then((r) => {
         if (!r.ok) throw new Error('Could not load listings')
         return r.json()
       })
+      // .then((data) => {
+      //   if (!cancelled) setRaw(Array.isArray(data.products) ? data.products : [])
+      // })
       .then((data) => {
-        if (!cancelled) setRaw(Array.isArray(data.products) ? data.products : [])
+        if (!cancelled) setRaw(Array.isArray(data) ? data : [])
       })
       .catch(() => {
         if (!cancelled) setError('Unable to reach the listings service. Check your connection.')
@@ -30,7 +35,8 @@ export function ListingsProvider({ children }) {
     }
   }, [])
 
-  const listings = useMemo(() => raw.map(normalizeProduct).filter(Boolean), [raw])
+  // const listings = useMemo(() => raw.map(normalizeProduct).filter(Boolean), [raw])
+  const listings = useMemo(() => raw, [raw])
 
   const value = useMemo(
     () => ({ listings, loading, error }),
