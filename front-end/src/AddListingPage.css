@@ -289,3 +289,9 @@
 .add-listing-btn--primary:hover {
   background: #222;
 }
+
+.add-listing-error {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  color: #b42318;
+}
