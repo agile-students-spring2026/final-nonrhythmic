@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ListingsContext } from './listingsContext'
-// import { normalizeProduct } from '../listings/normalizeProduct'
 
-// const PRODUCTS_URL = 'https://dummyjson.com/products?limit=40'
 const LISTINGS_URL = 'http://localhost:3000/api/listings'
 
 export function ListingsProvider({ children }) {
@@ -12,15 +10,12 @@ export function ListingsProvider({ children }) {
 
   useEffect(() => {
     let cancelled = false
-    // fetch(PRODUCTS_URL)
+
     fetch(LISTINGS_URL)
       .then((r) => {
         if (!r.ok) throw new Error('Could not load listings')
         return r.json()
       })
-      // .then((data) => {
-      //   if (!cancelled) setRaw(Array.isArray(data.products) ? data.products : [])
-      // })
       .then((data) => {
         if (!cancelled) setRaw(Array.isArray(data) ? data : [])
       })
@@ -30,16 +25,34 @@ export function ListingsProvider({ children }) {
       .finally(() => {
         if (!cancelled) setLoading(false)
       })
+
     return () => {
       cancelled = true
     }
   }, [])
 
-  // const listings = useMemo(() => raw.map(normalizeProduct).filter(Boolean), [raw])
+  async function createListing(payload) {
+    const res = await fetch(LISTINGS_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    })
+
+    if (!res.ok) {
+      throw new Error('Could not create listing')
+    }
+
+    const created = await res.json()
+    setRaw((prev) => [...prev, created])
+    return created
+  }
+
   const listings = useMemo(() => raw, [raw])
 
   const value = useMemo(
-    () => ({ listings, loading, error }),
+    () => ({ listings, loading, error, createListing }),
     [listings, loading, error],
   )
 

@@ -7,7 +7,10 @@ import './ProfilePage.css'
 
 function ProfilePage() {
   const { listings, loading } = useListings()
-  const myListings = useMemo(() => listings.slice(0, 2), [listings])
+  const myListings = useMemo(
+    () => listings.filter((listing) => listing.owner === 'Kaiyuan Wu'),
+    [listings],
+  )
   const [isEditing, setIsEditing] = useState(false)
   const [info, setInfo] = useState(
     'Hi, I am looking for a clean and safe place near campus. I prefer a quiet environment and easy access to public transportation.',
@@ -41,7 +44,7 @@ function ProfilePage() {
                 height={120}
               />
             </div>
-            <h2 className="profile-username">Username</h2>
+            <h2 className="profile-username">Kaiyuan Wu</h2>
           </div>
 
           <section className="profile-section" aria-labelledby="profile-about-heading">
