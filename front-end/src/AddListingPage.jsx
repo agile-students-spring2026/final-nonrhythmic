@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import MainNav from './MainNav'
 import './AddListingPage.css'
 
@@ -19,21 +19,69 @@ const initialForm = {
 }
 
 function AddListingPage() {
+  const navigate = useNavigate()
   const [form, setForm] = useState(initialForm)
   const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
   function update(key, value) {
     setForm((f) => ({ ...f, [key]: value }))
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
-    setSubmitted(true)
+    setSubmitting(true)
+    setSubmitError('')
+
+    const isSublessor = form.role === 'sublessor'
+
+    const payload = isSublessor
+      ? {
+          name: form.name || 'New Listing',
+          location: form.sublessorAddress || 'New York',
+          price: '$1000/month',
+          rating: 4.5,
+          details: 'Details',
+          description: form.sublessorDetails || 'New sublease listing',
+          owner: 'Kaiyuan Wu',
+        }
+      : {
+          name: `${form.name || 'Tenant'} Application`,
+          location: form.tenantNeighborhoods || 'New York',
+          price: '$0/month',
+          rating: 4.0,
+          details: 'Details',
+          description: form.tenantIdeal || form.tenantComments || 'Tenant application',
+          owner: 'Kaiyuan Wu',
+        }
+
+    try {
+      const res = await fetch('http://localhost:3000/api/listings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!res.ok) {
+        throw new Error('Failed to submit listing')
+      }
+
+      await res.json()
+      setSubmitted(true)
+    } catch (err) {
+      setSubmitError('Could not submit listing right now.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   function handleReset() {
     setForm(initialForm)
     setSubmitted(false)
+    setSubmitError('')
   }
 
   if (submitted) {
@@ -47,9 +95,13 @@ function AddListingPage() {
               <button type="button" className="add-listing-btn add-listing-btn--secondary" onClick={handleReset}>
                 Submit another
               </button>
-              <Link to="/listings" className="add-listing-btn add-listing-btn--primary">
-                Browse subleases
-              </Link>
+              <button
+                type="button"
+                className="add-listing-btn add-listing-btn--primary"
+                onClick={() => navigate('/profile')}
+              >
+                Go to profile
+              </button>
             </div>
           </div>
           <MainNav active="add" />
@@ -250,8 +302,14 @@ function AddListingPage() {
             </>
           )}
 
-          <button type="submit" className="add-listing-submit">
-            {isSublessor ? 'Submit sublessor application' : 'Submit rental application'}
+          {submitError ? <p className="add-listing-error">{submitError}</p> : null}
+
+          <button type="submit" className="add-listing-submit" disabled={submitting}>
+            {submitting
+              ? 'Submitting...'
+              : isSublessor
+                ? 'Submit sublessor application'
+                : 'Submit rental application'}
           </button>
         </form>
 
