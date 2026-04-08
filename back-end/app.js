@@ -1,8 +1,7 @@
-import express from 'express'
-import cors from 'cors'
+const express = require('express')
+const cors = require('cors')
 
 const app = express()
-const PORT = process.env.PORT || 3000
 
 app.use(cors())
 app.use(express.json())
@@ -40,25 +39,8 @@ let listings = [
   },
 ]
 
-let profile = {
-  username: 'Kaiyuan Wu',
-  bio: 'Hi, I am looking for a clean and safe place near campus. I prefer a quiet environment and easy access to public transportation.',
-}
-
-app.get('/api/health', (_req, res) => {
-  res.json({ ok: true })
-})
-
-app.get('/api/listings', (_req, res) => {
+app.get('/api/listings', (req, res) => {
   res.json(listings)
-})
-
-app.get('/api/listings/:id', (req, res) => {
-  const listing = listings.find((item) => item.id === Number(req.params.id))
-  if (!listing) {
-    return res.status(404).json({ error: 'Listing not found' })
-  }
-  res.json(listing)
 })
 
 app.post('/api/listings', (req, res) => {
@@ -68,16 +50,17 @@ app.post('/api/listings', (req, res) => {
     return res.status(400).json({ error: 'name, location, and price are required' })
   }
 
-  const nextId = listings.length ? Math.max(...listings.map((item) => item.id)) + 1 : 1
+  const nextId =
+    listings.length > 0 ? Math.max(...listings.map((l) => l.id)) + 1 : 1
 
   const newListing = {
     id: nextId,
     name,
     location,
     price,
-    rating: Number(rating) || 4.5,
+    rating: typeof rating === 'number' ? rating : 4.0,
     details: details || 'Details',
-    description: description || 'No description provided.',
+    description: description || 'No description provided yet.',
     owner: owner || 'Kaiyuan Wu',
   }
 
@@ -85,21 +68,4 @@ app.post('/api/listings', (req, res) => {
   res.status(201).json(newListing)
 })
 
-app.get('/api/profile', (_req, res) => {
-  res.json(profile)
-})
-
-app.put('/api/profile', (req, res) => {
-  const { username, bio } = req.body
-  if (typeof username === 'string' && username.trim()) {
-    profile.username = username.trim()
-  }
-  if (typeof bio === 'string') {
-    profile.bio = bio
-  }
-  res.json(profile)
-})
-
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`)
-})
+module.exports = app
