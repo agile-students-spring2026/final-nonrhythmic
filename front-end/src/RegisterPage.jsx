@@ -1,8 +1,50 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from './hooks/useAuth'
 import MainNav from './MainNav'
 import './AuthPage.css'
 
 function RegisterPage() {
+  const navigate = useNavigate()
+  const { register } = useAuth()
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  })
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
+
+  function update(key, value) {
+    setForm((current) => ({ ...current, [key]: value }))
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+
+    if (form.password !== form.confirmPassword) {
+      setError('Passwords do not match.')
+      return
+    }
+
+    setSubmitting(true)
+    setError('')
+
+    try {
+      await register({
+        name: form.name,
+        email: form.email,
+        password: form.password,
+      })
+      navigate('/profile')
+    } catch (err) {
+      setError(err.message || 'Could not create your account right now.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <div className="auth-page">
       <div className="auth-shell">
@@ -21,15 +63,18 @@ function RegisterPage() {
           <h1 className="auth-title">Create account</h1>
         </header>
 
-        <form
-          className="auth-form"
-          onSubmit={(e) => {
-            e.preventDefault()
-          }}
-        >
+        <form className="auth-form" onSubmit={handleSubmit}>
           <label className="auth-field">
             <span className="auth-label">Display name</span>
-            <input className="auth-input" type="text" name="name" placeholder="Your name" />
+            <input
+              className="auth-input"
+              type="text"
+              name="name"
+              placeholder="Your name"
+              value={form.name}
+              onChange={(e) => update('name', e.target.value)}
+              required
+            />
           </label>
           <label className="auth-field">
             <span className="auth-label">Email</span>
@@ -39,6 +84,9 @@ function RegisterPage() {
               name="email"
               autoComplete="email"
               placeholder="you@school.edu"
+              value={form.email}
+              onChange={(e) => update('email', e.target.value)}
+              required
             />
           </label>
           <label className="auth-field">
@@ -49,6 +97,9 @@ function RegisterPage() {
               name="password"
               autoComplete="new-password"
               placeholder="At least 8 characters"
+              value={form.password}
+              onChange={(e) => update('password', e.target.value)}
+              required
             />
           </label>
           <label className="auth-field">
@@ -59,10 +110,14 @@ function RegisterPage() {
               name="confirmPassword"
               autoComplete="new-password"
               placeholder="Re-enter password"
+              value={form.confirmPassword}
+              onChange={(e) => update('confirmPassword', e.target.value)}
+              required
             />
           </label>
-          <button type="submit" className="auth-submit">
-            Create account
+          {error ? <p className="auth-status auth-status--error">{error}</p> : null}
+          <button type="submit" className="auth-submit" disabled={submitting}>
+            {submitting ? 'Creating account...' : 'Create account'}
           </button>
         </form>
 
@@ -80,4 +135,3 @@ function RegisterPage() {
 }
 
 export default RegisterPage
-

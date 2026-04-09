@@ -188,6 +188,13 @@
   color: var(--vp-ink);
 }
 
+.tenant-profile-status {
+  margin: 0.4rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--vp-muted);
+}
+
 .tenant-profile-contact {
   flex-shrink: 0;
   padding: 0.65rem 1.25rem;
@@ -205,6 +212,11 @@
 .tenant-profile-contact:hover {
   background: #222;
   border-color: #222;
+}
+
+.tenant-profile-contact:disabled {
+  cursor: wait;
+  opacity: 0.72;
 }
 
 .tenant-profile-page .bottom-nav {

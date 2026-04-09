@@ -1,7 +1,9 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { createContactRequest, submitApplication } from './api/actions'
 import { fetchProductById } from './api/fetchProductById'
 import MainNav from './MainNav'
+import { useAuth } from './hooks/useAuth'
 import './ListingDetailPage.css'
 
 function ListingDetailPage() {
@@ -10,12 +12,17 @@ function ListingDetailPage() {
 }
 
 function ListingDetailInner({ id }) {
+  const navigate = useNavigate()
+  const { user } = useAuth()
   const [listing, setListing] = useState(null)
   const [loadError, setLoadError] = useState(null)
   const [loading, setLoading] = useState(true)
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
   const [mapPickerOpen, setMapPickerOpen] = useState(false)
   const [actionDialog, setActionDialog] = useState(null)
+  const [actionError, setActionError] = useState('')
+  const [actionBusy, setActionBusy] = useState(false)
+  const [activeAction, setActiveAction] = useState(null)
   const mapTitleId = useId()
   const actionDialogTitleId = useId()
   const mapPrimaryActionRef = useRef(null)
@@ -25,6 +32,9 @@ function ListingDetailInner({ id }) {
 
   useEffect(() => {
     let cancelled = false
+    setLoading(true)
+    setActionError('')
+
     fetchProductById(id)
       .then((data) => {
         if (cancelled) return
@@ -79,6 +89,38 @@ function ListingDetailInner({ id }) {
     setMapPickerOpen(false)
   }
 
+  async function handleAction(kind) {
+    if (!user) {
+      navigate('/login')
+      return
+    }
+
+    setActionBusy(true)
+    setActiveAction(kind)
+    setActionError('')
+
+    try {
+      if (kind === 'apply') {
+        await submitApplication({
+          listingId: listing.id,
+          userId: user.id,
+        })
+      } else {
+        await createContactRequest({
+          targetType: 'listing',
+          targetId: String(listing.id),
+          userId: user.id,
+        })
+      }
+      setActionDialog(kind)
+    } catch (err) {
+      setActionError(err.message || 'Could not complete that action right now.')
+    } finally {
+      setActionBusy(false)
+      setActiveAction(null)
+    }
+  }
+
   if (loading) {
     return (
       <div className="listing-detail-page">
@@ -115,8 +157,6 @@ function ListingDetailInner({ id }) {
   return (
     <div className="listing-detail-page">
       <article className="listing-detail-shell">
-        <div className="listing-detail-hero">
-
         <div className="listing-detail-hero">
           <Link to="/listings" className="listing-detail-back" aria-label="Back to listings">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -160,24 +200,22 @@ function ListingDetailInner({ id }) {
           >
             ›
           </button>
-          <div className="listing-detail-dots">
-          {images.map((_, index) => (
-            <button
-              key={index}
-              type="button"
-              className={
-                index === currentImage
-                  ? 'listing-detail-dot listing-detail-dot--active'
-                  : 'listing-detail-dot'
-              }
-              onClick={() => setCurrentImage(index)}
-              aria-label={`Go to image ${index + 1}`}
-            />
-          ))}
-        </div>
-        </div>
-        
 
+          <div className="listing-detail-dots">
+            {images.map((_, index) => (
+              <button
+                key={index}
+                type="button"
+                className={
+                  index === currentImage
+                    ? 'listing-detail-dot listing-detail-dot--active'
+                    : 'listing-detail-dot'
+                }
+                onClick={() => setCurrentImage(index)}
+                aria-label={`Go to image ${index + 1}`}
+              />
+            ))}
+          </div>
         </div>
 
         <div className="listing-detail-body">
@@ -217,6 +255,8 @@ function ListingDetailInner({ id }) {
           >
             {descriptionExpanded ? 'Read less' : 'Read more'}
           </button>
+
+          {actionError ? <p className="listing-detail-inline-status">{actionError}</p> : null}
         </div>
 
         <footer className="listing-detail-footer">
@@ -228,16 +268,18 @@ function ListingDetailInner({ id }) {
             <button
               type="button"
               className="listing-detail-btn listing-detail-btn--ghost"
-              onClick={() => setActionDialog('contact')}
+              onClick={() => handleAction('contact')}
+              disabled={actionBusy}
             >
-              Contact
+              {actionBusy && activeAction === 'contact' ? 'Sending...' : 'Contact'}
             </button>
             <button
               type="button"
               className="listing-detail-btn listing-detail-btn--primary"
-              onClick={() => setActionDialog('apply')}
+              onClick={() => handleAction('apply')}
+              disabled={actionBusy}
             >
-              Apply now
+              {actionBusy && activeAction === 'apply' ? 'Submitting...' : 'Apply now'}
             </button>
           </div>
         </footer>
@@ -297,10 +339,7 @@ function ListingDetailInner({ id }) {
           role="presentation"
           onClick={() => setImageZoomOpen(false)}
         >
-          <div
-            className="listing-detail-zoom-dialog"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="listing-detail-zoom-dialog" onClick={(e) => e.stopPropagation()}>
             <button
               type="button"
               className="listing-detail-zoom-close"
@@ -321,11 +360,7 @@ function ListingDetailInner({ id }) {
               ‹
             </button>
 
-            <img
-              src={images[currentImage]}
-              alt=""
-              className="listing-detail-zoom-image"
-            />
+            <img src={images[currentImage]} alt="" className="listing-detail-zoom-image" />
 
             <button
               type="button"

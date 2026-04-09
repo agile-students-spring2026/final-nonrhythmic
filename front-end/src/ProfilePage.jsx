@@ -2,14 +2,18 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ListingCard from './ListingCard'
 import MainNav from './MainNav'
+import { useAuth } from './hooks/useAuth'
 import { useListings } from './hooks/useListings'
 import './ProfilePage.css'
 
 function ProfilePage() {
+  const { user, logout } = useAuth()
   const { listings, loading } = useListings()
+  const profileName = user?.name || 'Kaiyuan Wu'
+  const profileEmail = user?.email || 'demo@subvet.app'
   const myListings = useMemo(
-    () => listings.filter((listing) => listing.owner === 'Kaiyuan Wu'),
-    [listings],
+    () => listings.filter((listing) => listing.owner === profileName),
+    [listings, profileName],
   )
   const [isEditing, setIsEditing] = useState(false)
   const [info, setInfo] = useState(
@@ -38,13 +42,19 @@ function ProfilePage() {
           <div className="profile-hero">
             <div className="profile-avatar">
               <img
-                src="https://picsum.photos/seed/subvet-profile/120/120"
+                src={`https://picsum.photos/seed/${encodeURIComponent(profileName)}/120/120`}
                 alt=""
                 width={120}
                 height={120}
               />
             </div>
-            <h2 className="profile-username">Kaiyuan Wu</h2>
+            <h2 className="profile-username">{profileName}</h2>
+            <p className="profile-email">{profileEmail}</p>
+            {user ? (
+              <button type="button" className="profile-session-btn" onClick={logout}>
+                Sign out
+              </button>
+            ) : null}
           </div>
 
           <section className="profile-section" aria-labelledby="profile-about-heading">

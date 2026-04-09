@@ -135,6 +135,24 @@
   color: var(--lp-ink);
 }
 
+.profile-email {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--lp-muted);
+}
+
+.profile-session-btn {
+  border: 1px solid var(--lp-line-soft);
+  background: #fafafa;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--lp-ink);
+  cursor: pointer;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+}
+
 .profile-section {
   display: flex;
   flex-direction: column;

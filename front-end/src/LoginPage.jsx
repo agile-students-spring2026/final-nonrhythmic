@@ -1,8 +1,35 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from './hooks/useAuth'
 import MainNav from './MainNav'
 import './AuthPage.css'
 
 function LoginPage() {
+  const navigate = useNavigate()
+  const { login } = useAuth()
+  const [form, setForm] = useState({ email: '', password: '' })
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
+
+  function update(key, value) {
+    setForm((current) => ({ ...current, [key]: value }))
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    setSubmitting(true)
+    setError('')
+
+    try {
+      await login(form)
+      navigate('/profile')
+    } catch (err) {
+      setError(err.message || 'Could not sign in right now.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <div className="auth-page">
       <div className="auth-shell">
@@ -21,12 +48,7 @@ function LoginPage() {
           <h1 className="auth-title">Sign in</h1>
         </header>
 
-        <form
-          className="auth-form"
-          onSubmit={(e) => {
-            e.preventDefault()
-          }}
-        >
+        <form className="auth-form" onSubmit={handleSubmit}>
           <label className="auth-field">
             <span className="auth-label">Email</span>
             <input
@@ -35,6 +57,9 @@ function LoginPage() {
               name="email"
               autoComplete="username"
               placeholder="you@school.edu"
+              value={form.email}
+              onChange={(e) => update('email', e.target.value)}
+              required
             />
           </label>
           <label className="auth-field">
@@ -45,10 +70,14 @@ function LoginPage() {
               name="password"
               autoComplete="current-password"
               placeholder="••••••••"
+              value={form.password}
+              onChange={(e) => update('password', e.target.value)}
+              required
             />
           </label>
-          <button type="submit" className="auth-submit">
-            Sign in
+          {error ? <p className="auth-status auth-status--error">{error}</p> : null}
+          <button type="submit" className="auth-submit" disabled={submitting}>
+            {submitting ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
 
@@ -66,4 +95,3 @@ function LoginPage() {
 }
 
 export default LoginPage
-

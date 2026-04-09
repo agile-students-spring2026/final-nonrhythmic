@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { createListing as createListingRequest, getListings } from '../api/listings'
 import { ListingsContext } from './listingsContext'
-
-const LISTINGS_URL = 'http://localhost:3000/api/listings'
 
 export function ListingsProvider({ children }) {
   const [raw, setRaw] = useState([])
@@ -11,11 +10,7 @@ export function ListingsProvider({ children }) {
   useEffect(() => {
     let cancelled = false
 
-    fetch(LISTINGS_URL)
-      .then((r) => {
-        if (!r.ok) throw new Error('Could not load listings')
-        return r.json()
-      })
+    getListings()
       .then((data) => {
         if (!cancelled) setRaw(Array.isArray(data) ? data : [])
       })
@@ -32,29 +27,12 @@ export function ListingsProvider({ children }) {
   }, [])
 
   async function createListing(payload) {
-    const res = await fetch(LISTINGS_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    })
-
-    if (!res.ok) {
-      throw new Error('Could not create listing')
-    }
-
-    const created = await res.json()
+    const created = await createListingRequest(payload)
     setRaw((prev) => [...prev, created])
     return created
   }
 
-  const listings = useMemo(() => raw, [raw])
-
-  const value = useMemo(
-    () => ({ listings, loading, error, createListing }),
-    [listings, loading, error],
-  )
+  const value = { listings: raw, loading, error, createListing }
 
   return <ListingsContext.Provider value={value}>{children}</ListingsContext.Provider>
 }
