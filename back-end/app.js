@@ -1,45 +1,17 @@
+const path = require('node:path')
 const express = require('express')
 const cors = require('cors')
-const listings = require('./listingsData')
+const initialListings = require('./listingsData')
 const tenants = require('./tenantsData')
 
 const app = express()
 
+/** In-memory listings (GET/POST can mutate; seed from mock data module) */
+let listings = [...initialListings]
+
 app.use(cors())
 app.use(express.json())
 
-let listings = [
-  {
-    id: 1,
-    name: 'NYC Apartment',
-    location: 'Manhattan',
-    price: '$1200/month',
-    rating: 4.7,
-    details: 'Details',
-    description: 'Spacious Manhattan apartment close to campus and transit.',
-    owner: 'Kaiyuan Wu',
-  },
-  {
-    id: 2,
-    name: 'Brooklyn Room',
-    location: 'Brooklyn',
-    price: '$900/month',
-    rating: 4.5,
-    details: 'Details',
-    description: 'Cozy Brooklyn room in a quiet neighborhood.',
-    owner: 'Kaiyuan Wu',
-  },
-  {
-    id: 3,
-    name: 'Queens Studio',
-    location: 'Queens',
-    price: '$1100/month',
-    rating: 4.6,
-    details: 'Details',
-    description: 'Private studio with easy subway access.',
-    owner: 'Other User',
-  },
-]
 app.get('/health', (req, res) => res.json({ ok: true }))
 app.get('/api/health', (req, res) => res.json({ ok: true }))
 
@@ -49,10 +21,6 @@ app.get('/api/listings', (req, res) => {
 
 app.post('/api/listings', (req, res) => {
   const { name, location, price, rating, details, description, owner } = req.body
-app.get('/api/listings/:id', (req, res) => {
-  const id = Number(req.params.id)
-  const listing = listings.find((l) => l.id === id)
-
   if (!name || !location || !price) {
     return res.status(400).json({ error: 'name, location, and price are required' })
   }
@@ -65,17 +33,31 @@ app.get('/api/listings/:id', (req, res) => {
     name,
     location,
     price,
-    rating: typeof rating === 'number' ? rating : 4.0,
+    rating: typeof rating === 'number' ? String(rating) : rating ?? '4.0',
     details: details || 'Details',
     description: description || 'No description provided yet.',
-    owner: owner || 'Kaiyuan Wu',
+    owner: owner || 'Unknown',
+    bhk: '1',
+    area: location,
+    rentUsd: 1000,
+    mapQuery: `${location}, New York, NY`,
   }
 
   listings.push(newListing)
   res.status(201).json(newListing)
 })
 
-module.exports = app
+app.get('/api/listings/:id', (req, res) => {
+  const id = Number(req.params.id)
+  const listing = listings.find((l) => l.id === id)
+
+  if (!listing) {
+    return res.status(404).json({ error: 'Listing not found' })
+  }
+
+  res.json(listing)
+})
+
 app.get('/api/tenants', (req, res) => {
   res.json(tenants)
 })
@@ -98,6 +80,8 @@ app.post('/api/applications', (req, res) => {
   res.status(201).json({ ok: true })
 })
 
+app.use(express.static(path.join(__dirname, 'public')))
+
 app.use((req, res) => {
   res.status(404).json({ error: 'Not Found' })
 })
@@ -107,6 +91,4 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal Server Error' })
 })
 
-
 module.exports = app
-
