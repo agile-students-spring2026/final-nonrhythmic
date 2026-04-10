@@ -1,9 +1,15 @@
+const path = require('node:path')
 const express = require('express')
 const cors = require('cors')
 const seedListings = require('./listingsData')
 const seedTenants = require('./tenantsData')
+const initialListings = require('./listingsData')
+const tenants = require('./tenantsData')
 
 const app = express()
+
+/** In-memory listings (GET/POST can mutate; seed from mock data module) */
+let listings = [...initialListings]
 
 app.use(cors())
 app.use(express.json())
@@ -51,6 +57,10 @@ app.get('/api/listings/:id', (req, res) => {
   const listing = listings.find((item) => item.id === id)
   if (!listing) {
     return res.status(404).json({ error: 'Listing not found' })
+app.post('/api/listings', (req, res) => {
+  const { name, location, price, rating, details, description, owner } = req.body
+  if (!name || !location || !price) {
+    return res.status(400).json({ error: 'name, location, and price are required' })
   }
   return res.json(listing)
 })
@@ -72,6 +82,14 @@ app.post('/api/listings', (req, res) => {
 
   if (!name || !location || !price) {
     return badRequest(res, 'name, location, and price are required')
+    rating: typeof rating === 'number' ? String(rating) : rating ?? '4.0',
+    details: details || 'Details',
+    description: description || 'No description provided yet.',
+    owner: owner || 'Unknown',
+    bhk: '1',
+    area: location,
+    rentUsd: 1000,
+    mapQuery: `${location}, New York, NY`,
   }
 
   const nextId = nextNumericId(listings)
@@ -96,6 +114,17 @@ app.post('/api/listings', (req, res) => {
 
   listings.push(listing)
   return res.status(201).json(listing)
+})
+
+app.get('/api/listings/:id', (req, res) => {
+  const id = Number(req.params.id)
+  const listing = listings.find((l) => l.id === id)
+
+  if (!listing) {
+    return res.status(404).json({ error: 'Listing not found' })
+  }
+
+  res.json(listing)
 })
 
 app.get('/api/tenants', (req, res) => {
@@ -272,6 +301,8 @@ app.post('/api/contact-requests', (req, res) => {
   contactRequests.push(contactRequest)
   return res.status(201).json({ ok: true, contactRequest })
 })
+
+app.use(express.static(path.join(__dirname, 'public')))
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Not Found' })
