@@ -1,5 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from './hooks/useAuth'
+import { useListings } from './hooks/useListings'
+import { useTenants } from './hooks/useTenants'
 import MainNav from './MainNav'
 import './AddListingPage.css'
 
@@ -10,18 +13,36 @@ const initialForm = {
   sublessorAddress: '',
   sublessorFrom: '',
   sublessorTo: '',
+  sublessorPrice: '',
   sublessorDetails: '',
   tenantNeighborhoods: '',
   tenantFrom: '',
   tenantTo: '',
+  tenantBudget: '',
   tenantIdeal: '',
   tenantComments: '',
 }
 
+function formatWindow(start, end) {
+  if (!start || !end) return 'Flexible summer dates'
+
+  const formatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  return `${formatter.format(new Date(start))} - ${formatter.format(new Date(end))}`
+}
+
+function formatMonthlyPrice(amount) {
+  const value = Number(amount)
+  if (!Number.isFinite(value) || value <= 0) return null
+  return `$${value.toLocaleString('en-US')}/mo`
+}
+
 function AddListingPage() {
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const { createListing } = useListings()
+  const { createTenant } = useTenants()
   const [form, setForm] = useState(initialForm)
-  const [submitted, setSubmitted] = useState(false)
+  const [submitted, setSubmitted] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
 
@@ -35,44 +56,52 @@ function AddListingPage() {
     setSubmitError('')
 
     const isSublessor = form.role === 'sublessor'
-
-    const payload = isSublessor
-      ? {
-          name: form.name || 'New Listing',
-          location: form.sublessorAddress || 'New York',
-          price: '$1000/month',
-          rating: 4.5,
-          details: 'Details',
-          description: form.sublessorDetails || 'New sublease listing',
-          owner: 'Kaiyuan Wu',
-        }
-      : {
-          name: `${form.name || 'Tenant'} Application`,
-          location: form.tenantNeighborhoods || 'New York',
-          price: '$0/month',
-          rating: 4.0,
-          details: 'Details',
-          description: form.tenantIdeal || form.tenantComments || 'Tenant application',
-          owner: 'Kaiyuan Wu',
-        }
+    const actorName = user?.name || 'Kaiyuan Wu'
 
     try {
-      const res = await fetch('http://localhost:3000/api/listings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      })
+      if (isSublessor) {
+        const monthlyPrice = formatMonthlyPrice(form.sublessorPrice)
+        if (!monthlyPrice) {
+          throw new Error('Enter a valid monthly rent.')
+        }
 
-      if (!res.ok) {
-        throw new Error('Failed to submit listing')
+        const createdListing = await createListing({
+          name: form.name || 'New Listing',
+          location: form.sublessorAddress || 'New York',
+          price: monthlyPrice,
+          rating: 4.5,
+          details: formatWindow(form.sublessorFrom, form.sublessorTo),
+          description: form.sublessorDetails || 'New sublease listing',
+          owner: actorName,
+          bhk: 'room',
+          area: form.sublessorAddress || 'New York',
+          rentUsd: Number(form.sublessorPrice),
+          mapQuery: form.sublessorAddress || 'New York, NY',
+        })
+
+        setSubmitted({ role: 'sublessor', targetId: createdListing.id })
+      } else {
+        const budget = formatMonthlyPrice(form.tenantBudget)
+        if (!budget) {
+          throw new Error('Enter a valid monthly budget.')
+        }
+
+        const createdTenant = await createTenant({
+          displayName: form.name || actorName,
+          age: Number(form.age),
+          neighborhoods: form.tenantNeighborhoods,
+          subleaseWindow: formatWindow(form.tenantFrom, form.tenantTo),
+          budget,
+          intro: `${form.name || actorName} is looking for a summer sublease in ${form.tenantNeighborhoods}.`,
+          ideal: form.tenantIdeal || 'Flexible on layout, but looking for a clean and safe place.',
+          questions: form.tenantComments || 'No questions yet.',
+          company: user?.name || 'Summer internship',
+        })
+
+        setSubmitted({ role: 'tenant', targetId: createdTenant.id })
       }
-
-      await res.json()
-      setSubmitted(true)
     } catch (err) {
-      setSubmitError('Could not submit listing right now.')
+      setSubmitError(err.message || 'Could not submit listing right now.')
     } finally {
       setSubmitting(false)
     }
@@ -80,17 +109,23 @@ function AddListingPage() {
 
   function handleReset() {
     setForm(initialForm)
-    setSubmitted(false)
+    setSubmitted(null)
     setSubmitError('')
   }
 
   if (submitted) {
+    const isSublessor = submitted.role === 'sublessor'
+
     return (
       <div className="add-listing-page">
         <div className="add-listing-shell add-listing-shell--done">
           <div className="add-listing-success">
             <h1 className="add-listing-title add-listing-title--plain">Thanks</h1>
-            <p className="add-listing-success-text">Your application was received.</p>
+            <p className="add-listing-success-text">
+              {isSublessor
+                ? 'Your sublease listing is live.'
+                : 'Your tenant profile has been added to the tenant directory.'}
+            </p>
             <div className="add-listing-success-actions">
               <button type="button" className="add-listing-btn add-listing-btn--secondary" onClick={handleReset}>
                 Submit another
@@ -98,9 +133,11 @@ function AddListingPage() {
               <button
                 type="button"
                 className="add-listing-btn add-listing-btn--primary"
-                onClick={() => navigate('/profile')}
+                onClick={() =>
+                  navigate(isSublessor ? '/profile' : `/tenant/${submitted.targetId}`)
+                }
               >
-                Go to profile
+                {isSublessor ? 'Go to profile' : 'View tenant profile'}
               </button>
             </div>
           </div>
@@ -221,6 +258,19 @@ function AddListingPage() {
                 </label>
               </div>
               <label className="add-listing-field">
+                <span className="add-listing-label">Monthly rent</span>
+                <input
+                  className="add-listing-input"
+                  type="number"
+                  min={1}
+                  inputMode="numeric"
+                  placeholder="1200"
+                  value={form.sublessorPrice}
+                  onChange={(e) => update('sublessorPrice', e.target.value)}
+                  required
+                />
+              </label>
+              <label className="add-listing-field">
                 <span className="add-listing-label">Sublet details</span>
                 <textarea
                   className="add-listing-textarea"
@@ -276,6 +326,19 @@ function AddListingPage() {
                 </label>
               </div>
               <label className="add-listing-field">
+                <span className="add-listing-label">Monthly budget</span>
+                <input
+                  className="add-listing-input"
+                  type="number"
+                  min={1}
+                  inputMode="numeric"
+                  placeholder="1100"
+                  value={form.tenantBudget}
+                  onChange={(e) => update('tenantBudget', e.target.value)}
+                  required
+                />
+              </label>
+              <label className="add-listing-field">
                 <span className="add-listing-label">Ideal apartment</span>
                 <textarea
                   className="add-listing-textarea"
@@ -308,8 +371,8 @@ function AddListingPage() {
             {submitting
               ? 'Submitting...'
               : isSublessor
-                ? 'Submit sublessor application'
-                : 'Submit rental application'}
+                ? 'Submit sublessor listing'
+                : 'Submit tenant application'}
           </button>
         </form>
 

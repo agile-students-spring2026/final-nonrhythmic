@@ -1,9 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { createTenant as createTenantRequest, getTenants } from '../api/tenants'
 import { TenantsContext } from './tenantsContext'
-import { normalizeDummyUser } from '../tenants/normalizeDummyUser'
-
-const USERS_URL =
-  'https://dummyjson.com/users?limit=8&select=id,firstName,lastName,age,company,address,university'
 
 export function TenantsProvider({ children }) {
   const [raw, setRaw] = useState([])
@@ -12,13 +9,9 @@ export function TenantsProvider({ children }) {
 
   useEffect(() => {
     let cancelled = false
-    fetch(USERS_URL)
-      .then((r) => {
-        if (!r.ok) throw new Error('Could not load tenants')
-        return r.json()
-      })
+    getTenants()
       .then((data) => {
-        if (!cancelled) setRaw(Array.isArray(data.users) ? data.users : [])
+        if (!cancelled) setRaw(Array.isArray(data) ? data : [])
       })
       .catch(() => {
         if (!cancelled) setError('Unable to reach the tenant directory. Check your connection.')
@@ -31,12 +24,13 @@ export function TenantsProvider({ children }) {
     }
   }, [])
 
-  const tenants = useMemo(() => raw.map(normalizeDummyUser).filter(Boolean), [raw])
+  async function createTenant(payload) {
+    const created = await createTenantRequest(payload)
+    setRaw((prev) => [...prev, created])
+    return created
+  }
 
-  const value = useMemo(
-    () => ({ tenants, loading, error }),
-    [tenants, loading, error],
-  )
+  const value = { tenants: raw, loading, error, createTenant }
 
   return <TenantsContext.Provider value={value}>{children}</TenantsContext.Provider>
 }

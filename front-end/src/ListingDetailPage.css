@@ -248,6 +248,18 @@
   transform: scale(0.98);
 }
 
+.listing-detail-btn:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.listing-detail-inline-status {
+  margin: 0.85rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #b42318;
+}
+
 .listing-detail-map-overlay {
   position: fixed;
   inset: 0;

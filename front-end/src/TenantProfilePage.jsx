@@ -1,11 +1,41 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { createContactRequest } from './api/actions'
+import { getTenantById } from './api/tenants'
 import MainNav from './MainNav'
+import { useAuth } from './hooks/useAuth'
 import { useTenants } from './hooks/useTenants'
-import { normalizeDummyUser } from './tenants/normalizeDummyUser'
 import './TenantProfilePage.css'
 
 function TenantProfileDetail({ tenant }) {
+  const navigate = useNavigate()
+  const { user } = useAuth()
+  const [submitting, setSubmitting] = useState(false)
+  const [status, setStatus] = useState('')
+
+  async function handleContact() {
+    if (!user) {
+      navigate('/login')
+      return
+    }
+
+    setSubmitting(true)
+    setStatus('')
+
+    try {
+      await createContactRequest({
+        targetType: 'tenant',
+        targetId: tenant.id,
+        userId: user.id,
+      })
+      setStatus('Contact request sent.')
+    } catch (err) {
+      setStatus(err.message || 'Could not send your contact request.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <div className="tenant-profile-page">
       <article className="tenant-profile-shell">
@@ -74,9 +104,10 @@ function TenantProfileDetail({ tenant }) {
           <div>
             <p className="tenant-profile-price-label">Budget</p>
             <p className="tenant-profile-price">{tenant.budget}</p>
+            {status ? <p className="tenant-profile-status">{status}</p> : null}
           </div>
-          <button type="button" className="tenant-profile-contact">
-            Contact
+          <button type="button" className="tenant-profile-contact" onClick={handleContact} disabled={submitting}>
+            {submitting ? 'Sending...' : 'Contact'}
           </button>
         </footer>
         <MainNav active="tenants" />
@@ -90,18 +121,19 @@ function TenantProfileFetchById({ id }) {
 
   useEffect(() => {
     let cancelled = false
-    fetch(
-      `https://dummyjson.com/users/${id}?select=id,firstName,lastName,age,company,address,university`,
-    )
-      .then((r) => (r.ok ? r.json() : null))
-      .then((u) => {
-        if (cancelled) return
-        const t = u ? normalizeDummyUser(u) : null
-        setState({ status: t ? 'ok' : 'missing', tenant: t })
+
+    getTenantById(id)
+      .then((tenant) => {
+        if (!cancelled) {
+          setState({ status: 'ok', tenant })
+        }
       })
       .catch(() => {
-        if (!cancelled) setState({ status: 'missing', tenant: null })
+        if (!cancelled) {
+          setState({ status: 'missing', tenant: null })
+        }
       })
+
     return () => {
       cancelled = true
     }
@@ -140,7 +172,7 @@ function TenantProfilePage() {
   const { tenants, loading, error } = useTenants()
 
   const fromList = useMemo(
-    () => (tenantId ? tenants.find((t) => t.id === tenantId) : undefined),
+    () => (tenantId ? tenants.find((tenant) => tenant.id === tenantId) : undefined),
     [tenants, tenantId],
   )
 
@@ -173,7 +205,7 @@ function TenantProfilePage() {
     return <TenantProfileDetail tenant={fromList} />
   }
 
-  if (tenantId && /^\d+$/.test(tenantId)) {
+  if (tenantId) {
     return <TenantProfileFetchById key={tenantId} id={tenantId} />
   }
 
