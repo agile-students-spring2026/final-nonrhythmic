@@ -5,6 +5,7 @@ const seedListings = require('./listingsData')
 const seedTenants = require('./tenantsData')
 
 const app = express()
+app.disable('x-powered-by')
 
 app.use(cors())
 app.use(express.json())

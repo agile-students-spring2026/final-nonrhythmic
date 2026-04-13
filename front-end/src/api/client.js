@@ -1,4 +1,9 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000/api'
+/**
+ * Dev: `/api` on the Vite origin (see vite proxy). Build/preview without env: full URL to Express.
+ * Override: VITE_API_BASE_URL=https://host.example.com/api
+ */
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.DEV ? '/api' : 'http://localhost:3000/api')
 
 export class ApiError extends Error {
   constructor(message, status) {
