@@ -73,6 +73,7 @@ function AddListingPage() {
           details: formatWindow(form.sublessorFrom, form.sublessorTo),
           description: form.sublessorDetails || 'New sublease listing',
           owner: actorName,
+          ownerId: user?.id ?? null,
           bhk: 'room',
           area: form.sublessorAddress || 'New York',
           rentUsd: Number(form.sublessorPrice),

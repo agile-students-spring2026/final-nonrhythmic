@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { loginUser, registerUser } from '../api/auth'
 import { AuthContext } from './authContext'
 
@@ -41,16 +41,21 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
-  const value = useMemo(
-    () => ({
-      user,
-      isAuthenticated: Boolean(user),
-      login,
-      register,
-      logout,
-    }),
-    [user],
-  )
+  function syncUserProfile(nextUser) {
+    setUser((current) => {
+      if (!current || current.id !== nextUser.id) return current
+      return nextUser
+    })
+  }
+
+  const value = {
+    user,
+    isAuthenticated: Boolean(user),
+    login,
+    register,
+    logout,
+    syncUserProfile,
+  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

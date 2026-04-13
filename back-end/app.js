@@ -3,27 +3,55 @@ const express = require('express')
 const cors = require('cors')
 const seedListings = require('./listingsData')
 const seedTenants = require('./tenantsData')
-const initialListings = require('./listingsData')
-const tenants = require('./tenantsData')
 
 const app = express()
-
-/** In-memory listings (GET/POST can mutate; seed from mock data module) */
-let listings = [...initialListings]
 
 app.use(cors())
 app.use(express.json())
 
-let listings = seedListings.map((listing) => ({ ...listing }))
-let tenants = seedTenants.map((tenant) => ({ ...tenant }))
+function publicUser(user) {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    bio: user.bio,
+    avatarSeed: user.avatarSeed,
+  }
+}
+
+function defaultBio(name) {
+  return `${name} is looking for a clean and safe place near campus with good transit access.`
+}
+
+function buildUser({ id, name, email, password, bio, avatarSeed }) {
+  return {
+    id,
+    name,
+    email,
+    password,
+    bio: bio || defaultBio(name),
+    avatarSeed: avatarSeed || `subvet-user-${id}`,
+  }
+}
+
 let users = [
-  {
+  buildUser({
     id: 'demo',
     name: 'Kaiyuan Wu',
     email: 'demo@subvet.app',
     password: 'password123',
-  },
+    bio: 'Hi, I am looking for a clean and safe place near campus. I prefer a quiet environment and easy access to public transportation.',
+    avatarSeed: 'subvet-profile-demo',
+  }),
 ]
+
+let listings = seedListings.map((listing, index) => ({
+  ...listing,
+  ownerId: index < 2 ? 'demo' : null,
+  owner: index < 2 ? 'Kaiyuan Wu' : 'Other User',
+}))
+
+let tenants = seedTenants.map((tenant) => ({ ...tenant }))
 let applications = []
 let contactRequests = []
 
@@ -45,6 +73,27 @@ function nextNumericId(items) {
   return items.length > 0 ? Math.max(...items.map((item) => Number(item.id) || 0)) + 1 : 1
 }
 
+function nextUserId() {
+  return `user-${Date.now()}`
+}
+
+function normalizeListingOwner({ ownerId, owner }) {
+  if (!ownerId) {
+    return {
+      ownerId: null,
+      owner: owner ? String(owner).trim() : 'Kaiyuan Wu',
+    }
+  }
+
+  const user = findUserById(ownerId)
+  if (!user) return null
+
+  return {
+    ownerId: user.id,
+    owner: owner ? String(owner).trim() : user.name,
+  }
+}
+
 app.get('/health', (req, res) => res.json({ ok: true }))
 app.get('/api/health', (req, res) => res.json({ ok: true }))
 
@@ -55,13 +104,11 @@ app.get('/api/listings', (req, res) => {
 app.get('/api/listings/:id', (req, res) => {
   const id = Number(req.params.id)
   const listing = listings.find((item) => item.id === id)
+
   if (!listing) {
     return res.status(404).json({ error: 'Listing not found' })
-app.post('/api/listings', (req, res) => {
-  const { name, location, price, rating, details, description, owner } = req.body
-  if (!name || !location || !price) {
-    return res.status(400).json({ error: 'name, location, and price are required' })
   }
+
   return res.json(listing)
 })
 
@@ -74,6 +121,7 @@ app.post('/api/listings', (req, res) => {
     details,
     description,
     owner,
+    ownerId,
     bhk,
     area,
     rentUsd,
@@ -82,20 +130,20 @@ app.post('/api/listings', (req, res) => {
 
   if (!name || !location || !price) {
     return badRequest(res, 'name, location, and price are required')
-    rating: typeof rating === 'number' ? String(rating) : rating ?? '4.0',
-    details: details || 'Details',
-    description: description || 'No description provided yet.',
-    owner: owner || 'Unknown',
-    bhk: '1',
-    area: location,
-    rentUsd: 1000,
-    mapQuery: `${location}, New York, NY`,
   }
 
-  const nextId = nextNumericId(listings)
+  const normalizedOwner = normalizeListingOwner({
+    ownerId: ownerId ? String(ownerId) : null,
+    owner,
+  })
+
+  if (ownerId && !normalizedOwner) {
+    return res.status(404).json({ error: 'User not found' })
+  }
+
   const normalizedRent = Number(rentUsd)
   const listing = {
-    id: nextId,
+    id: nextNumericId(listings),
     name: String(name).trim(),
     location: String(location).trim(),
     price: String(price).trim(),
@@ -105,7 +153,8 @@ app.post('/api/listings', (req, res) => {
         : '4.5',
     details: details ? String(details).trim() : 'Private room · shared unit',
     description: description ? String(description).trim() : 'No description provided yet.',
-    owner: owner ? String(owner).trim() : 'Kaiyuan Wu',
+    owner: normalizedOwner?.owner ?? 'Kaiyuan Wu',
+    ownerId: normalizedOwner?.ownerId ?? null,
     bhk: bhk ? String(bhk) : 'room',
     area: area ? String(area).trim() : String(location).trim(),
     rentUsd: Number.isFinite(normalizedRent) ? normalizedRent : null,
@@ -116,26 +165,17 @@ app.post('/api/listings', (req, res) => {
   return res.status(201).json(listing)
 })
 
-app.get('/api/listings/:id', (req, res) => {
-  const id = Number(req.params.id)
-  const listing = listings.find((l) => l.id === id)
-
-  if (!listing) {
-    return res.status(404).json({ error: 'Listing not found' })
-  }
-
-  res.json(listing)
-})
-
 app.get('/api/tenants', (req, res) => {
   res.json(tenants)
 })
 
 app.get('/api/tenants/:id', (req, res) => {
   const tenant = tenants.find((item) => item.id === String(req.params.id))
+
   if (!tenant) {
     return res.status(404).json({ error: 'Tenant not found' })
   }
+
   return res.json(tenant)
 })
 
@@ -156,9 +196,8 @@ app.post('/api/tenants', (req, res) => {
     return badRequest(res, 'displayName, age, neighborhoods, and subleaseWindow are required')
   }
 
-  const nextId = String(nextNumericId(tenants))
   const tenant = {
-    id: nextId,
+    id: String(nextNumericId(tenants)),
     displayName: String(displayName).trim(),
     age: Number(age),
     neighborhoods: String(neighborhoods).trim(),
@@ -172,7 +211,7 @@ app.post('/api/tenants', (req, res) => {
       : 'Furnished or lightly furnished, respectful roommates if shared.',
     questions: questions ? String(questions).trim() : 'No questions yet.',
     company: company ? String(company).trim() : 'Summer internship',
-    avatarSeed: `subvet-tenant-${nextId}`,
+    avatarSeed: `subvet-tenant-${nextNumericId(tenants)}`,
   }
 
   tenants.push(tenant)
@@ -194,21 +233,18 @@ app.post('/api/auth/login', (req, res) => {
 
   const user =
     existing ??
-    {
-      id: `user-${Date.now()}`,
-      name: email.split('@')[0],
+    buildUser({
+      id: nextUserId(),
+      name: email.split('@')[0] || 'User',
       email,
       password,
-    }
+    })
 
   if (!existing) {
     users.push(user)
   }
 
-  return res.json({
-    ok: true,
-    user: { id: user.id, name: user.name, email: user.email },
-  })
+  return res.json({ ok: true, user: publicUser(user) })
 })
 
 app.post('/api/auth/register', (req, res) => {
@@ -224,18 +260,73 @@ app.post('/api/auth/register', (req, res) => {
     return res.status(409).json({ error: 'An account with this email already exists' })
   }
 
-  const user = {
-    id: `user-${Date.now()}`,
+  const user = buildUser({
+    id: nextUserId(),
     name,
     email,
     password,
-  }
+  })
 
   users.push(user)
-  return res.status(201).json({
-    ok: true,
-    user: { id: user.id, name: user.name, email: user.email },
+  return res.status(201).json({ ok: true, user: publicUser(user) })
+})
+
+app.get('/api/users/:id', (req, res) => {
+  const user = findUserById(req.params.id)
+
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' })
+  }
+
+  return res.json(publicUser(user))
+})
+
+app.patch('/api/users/:id', (req, res) => {
+  const user = findUserById(req.params.id)
+
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' })
+  }
+
+  const incoming = req.body ?? {}
+  const nextName =
+    incoming.name === undefined ? user.name : String(incoming.name).trim()
+  const nextBio = incoming.bio === undefined ? user.bio : String(incoming.bio).trim()
+  const nextAvatarSeed =
+    incoming.avatarSeed === undefined
+      ? user.avatarSeed
+      : String(incoming.avatarSeed).trim()
+
+  if (!nextName) {
+    return badRequest(res, 'name cannot be empty')
+  }
+
+  if (!nextBio) {
+    return badRequest(res, 'bio cannot be empty')
+  }
+
+  if (!nextAvatarSeed) {
+    return badRequest(res, 'avatarSeed cannot be empty')
+  }
+
+  const previousName = user.name
+  user.name = nextName
+  user.bio = nextBio
+  user.avatarSeed = nextAvatarSeed
+
+  listings = listings.map((listing) => {
+    if (listing.ownerId === user.id) {
+      return { ...listing, owner: user.name }
+    }
+
+    if (!listing.ownerId && listing.owner === previousName) {
+      return { ...listing, owner: user.name }
+    }
+
+    return listing
   })
+
+  return res.json(publicUser(user))
 })
 
 app.post('/api/applications', (req, res) => {
