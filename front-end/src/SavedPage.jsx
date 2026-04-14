@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+// import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import ListingCard from './ListingCard'
 import MainNav from './MainNav'
@@ -6,24 +7,32 @@ import { useListings } from './hooks/useListings'
 import './SavedPage.css'
 
 function SavedPage() {
-  const { listings, loading } = useListings()
+  // const { listings, loading } = useListings()
+  const { listings, loading, savedIds, toggleSaved } = useListings()
 
   // Seed some mock saved IDs so the page isn't empty on first visit
-  const [savedIds, setSavedIds] = useState(() => new Set([1, 3, 5]))
+  // const [savedIds, setSavedIds] = useState(() => new Set([1, 3, 5]))
+
+  // const savedListings = useMemo(
+  //   () => listings.filter((l) => savedIds.has(l.id)),
+  //   [listings, savedIds],
+  // ) 
 
   const savedListings = useMemo(
-    () => listings.filter((l) => savedIds.has(l.id)),
-    [listings, savedIds],
+  () => listings.filter((l) => savedIds.includes(l.id)),
+  [listings, savedIds],
   )
 
-  function toggleSaved(id) {
-    setSavedIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
+  
+
+  // function toggleSaved(id) {
+  //   setSavedIds((prev) => {
+  //     const next = new Set(prev)
+  //     if (next.has(id)) next.delete(id)
+  //     else next.add(id)
+  //     return next
+  //   })
+  // }
 
   return (
     <div className="saved-page">
@@ -63,9 +72,15 @@ function SavedPage() {
                   price={listing.price}
                   rating={listing.rating}
                   details={listing.details}
-                  saved={savedIds.has(listing.id)}
-                  onFavoriteToggle={() => toggleSaved(listing.id)}
-                />
+                  // saved={savedIds.has(listing.id)}
+                  // onFavoriteToggle={() => toggleSaved(listing.id)}
+                  saved={savedIds.includes(listing.id)}
+                  onFavoriteToggle={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    toggleSaved(listing.id)
+                  }}
+                  />
               </div>
             ))
           )}

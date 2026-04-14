@@ -54,6 +54,7 @@ let listings = seedListings.map((listing, index) => ({
 let tenants = seedTenants.map((tenant) => ({ ...tenant }))
 let applications = []
 let contactRequests = []
+let savedListings = [{ userId: 'demo', listingId: 1 }]
 
 function badRequest(res, message) {
   return res.status(400).json({ error: message })
@@ -110,6 +111,59 @@ app.get('/api/listings/:id', (req, res) => {
   }
 
   return res.json(listing)
+})
+
+app.get('/api/users/:id/saved-listings', (req, res) => {
+  const userId = String(req.params.id)
+
+  const savedIds = savedListings
+    .filter((item) => item.userId === userId)
+    .map((item) => item.listingId)
+
+  const saved = listings.filter((listing) => savedIds.includes(listing.id))
+
+  res.json(saved)
+})
+
+app.post('/api/users/:id/saved-listings', (req, res) => {
+  const userId = String(req.params.id)
+  const listingId = Number(req.body.listingId)
+
+  if (!listingId) {
+    return res.status(400).json({ error: 'listingId is required' })
+  }
+
+  const listing = listings.find((item) => item.id === listingId)
+  if (!listing) {
+    return res.status(404).json({ error: 'Listing not found' })
+  }
+
+  const alreadySaved = savedListings.some(
+    (item) => item.userId === userId && item.listingId === listingId
+  )
+
+  if (alreadySaved) {
+    return res.status(200).json({ ok: true, message: 'Already saved' })
+  }
+
+  savedListings.push({ userId, listingId })
+  res.status(201).json({ ok: true })
+})
+
+app.delete('/api/users/:id/saved-listings/:listingId', (req, res) => {
+  const userId = String(req.params.id)
+  const listingId = Number(req.params.listingId)
+
+  const before = savedListings.length
+  savedListings = savedListings.filter(
+    (item) => !(item.userId === userId && item.listingId === listingId)
+  )
+
+  if (savedListings.length === before) {
+    return res.status(404).json({ error: 'Saved listing not found' })
+  }
+
+  res.json({ ok: true })
 })
 
 app.post('/api/listings', (req, res) => {
@@ -280,6 +334,8 @@ app.get('/api/users/:id', (req, res) => {
 
   return res.json(publicUser(user))
 })
+
+
 
 app.patch('/api/users/:id', (req, res) => {
   const user = findUserById(req.params.id)
