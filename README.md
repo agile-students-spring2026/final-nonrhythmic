@@ -25,24 +25,22 @@ The current prototype includes:
 - Filter options for refining results
 - Listing detail page with more information
 - Save listing functionality (concept)
+- Add listing functionality (connected to backend)
+- Profile page displaying user-specific listings
+- Front-end and back-end integration
 
 ---
 
 ## Run the project locally
 
-This repository’s runnable **front-end** lives in [`front-end/`](./front-end/). There is no separate back-end in this repo yet; follow the front-end README to install, develop, build, and lint.
+This repository includes both a **front-end** and a **back-end**.
 
-**Quick start:**
+### Start the Back-End
 
 ```bash
-cd front-end
+cd back-end
 npm install
-npm run dev
-```
-
-For production build, preview, lint, and notes on secrets, see [`front-end/README.md`](./front-end/README.md).
-
----
+npm start
 
 ## Team Members
 
@@ -70,8 +68,7 @@ Please see the **CONTRIBUTING.md** file for information about the team's workflo
 
 ## Project Status
 
-This project is currently in the early design and planning stage. The team is developing the initial prototype and defining the Minimum Viable Product features.
-
+This project is currently in **Sprint 2 development**. The team has implemented a working back-end using Express.js and integrated it with the front-end. Users can now create listings and view data dynamically from the server.
 
 
 
@@ -81,8 +78,6 @@ This repository will be used for team projects.
 Several sets of instructions are included in this repository. They should each be treated as separate assignments with their own due dates and sets of requirements.
 
 1. See the [App Map & Wireframes](instructions-0a-app-map-wireframes.md) and [Prototyping](./instructions-0b-prototyping.md) instructions for the requirements of the initial user experience design of the app.
-
-1. Delete the contents of this file and replace with the contents of a proper README.md, as described in the [project setup instructions](./instructions-0c-project-setup.md)
 
 1. See the [Sprint Planning instructions](instructions-0d-sprint-planning.md) for the requirements of Sprint Planning for each Sprint.
 
