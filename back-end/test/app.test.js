@@ -7,6 +7,7 @@ describe('Back-end API', () => {
   const userEmail = `student-${uniqueSuffix}@example.com`
   let createdUserId = null
   let createdListingId = null
+  let authToken = null
 
   it('returns health status from /health', async () => {
     const res = await request(app).get('/health')
@@ -57,7 +58,9 @@ describe('Back-end API', () => {
     expect(res.body.ok).to.equal(true)
     expect(res.body.user.email).to.equal(userEmail)
     expect(res.body.user).to.have.property('id')
+    expect(res.body).to.have.property('token')
     createdUserId = res.body.user.id
+    authToken = res.body.token
   })
 
   it('rejects duplicate user registration', async () => {
@@ -80,13 +83,18 @@ describe('Back-end API', () => {
     expect(res.status).to.equal(200)
     expect(res.body.ok).to.equal(true)
     expect(res.body.user.email).to.equal(userEmail)
+    expect(res.body).to.have.property('token')
+    authToken = res.body.token
   })
 
   it('creates an application with /api/applications', async () => {
-    const res = await request(app).post('/api/applications').send({
-      listingId: createdListingId,
-      userId: createdUserId,
-    })
+    const res = await request(app)
+      .post('/api/applications')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({
+        listingId: createdListingId,
+        userId: createdUserId,
+      })
 
     expect(res.status).to.equal(201)
     expect(res.body.ok).to.equal(true)
@@ -95,11 +103,14 @@ describe('Back-end API', () => {
   })
 
   it('creates a contact request to a listing', async () => {
-    const res = await request(app).post('/api/contact-requests').send({
-      targetType: 'listing',
-      targetId: String(createdListingId),
-      userId: createdUserId,
-    })
+    const res = await request(app)
+      .post('/api/contact-requests')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({
+        targetType: 'listing',
+        targetId: String(createdListingId),
+        userId: createdUserId,
+      })
 
     expect(res.status).to.equal(201)
     expect(res.body.ok).to.equal(true)
@@ -107,11 +118,14 @@ describe('Back-end API', () => {
   })
 
   it('updates a profile with PATCH /api/users/:id', async () => {
-    const res = await request(app).patch(`/api/users/${createdUserId}`).send({
-      name: 'Updated Sprint Tester',
-      bio: 'Looking for summer housing',
-      avatarSeed: `avatar-${uniqueSuffix}`,
-    })
+    const res = await request(app)
+      .patch(`/api/users/${createdUserId}`)
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({
+        name: 'Updated Sprint Tester',
+        bio: 'Looking for summer housing',
+        avatarSeed: `avatar-${uniqueSuffix}`,
+      })
 
     expect(res.status).to.equal(200)
     expect(res.body.name).to.equal('Updated Sprint Tester')

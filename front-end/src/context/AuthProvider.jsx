@@ -3,6 +3,7 @@ import { loginUser, registerUser } from '../api/auth'
 import { AuthContext } from './authContext'
 
 const STORAGE_KEY = 'subvet.authUser'
+const TOKEN_STORAGE_KEY = 'subvet.authToken'
 
 function readStoredUser() {
   if (typeof window === 'undefined') return null
@@ -14,8 +15,18 @@ function readStoredUser() {
   }
 }
 
+function readStoredToken() {
+  if (typeof window === 'undefined') return null
+  try {
+    return window.localStorage.getItem(TOKEN_STORAGE_KEY)
+  } catch {
+    return null
+  }
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => readStoredUser())
+  const [token, setToken] = useState(() => readStoredToken())
 
   useEffect(() => {
     if (user) {
@@ -25,20 +36,31 @@ export function AuthProvider({ children }) {
     }
   }, [user])
 
+  useEffect(() => {
+    if (token) {
+      window.localStorage.setItem(TOKEN_STORAGE_KEY, token)
+    } else {
+      window.localStorage.removeItem(TOKEN_STORAGE_KEY)
+    }
+  }, [token])
+
   async function login(credentials) {
     const data = await loginUser(credentials)
     setUser(data.user)
+    setToken(data.token ?? null)
     return data.user
   }
 
   async function register(details) {
     const data = await registerUser(details)
     setUser(data.user)
+    setToken(data.token ?? null)
     return data.user
   }
 
   function logout() {
     setUser(null)
+    setToken(null)
   }
 
   function syncUserProfile(nextUser) {
@@ -50,6 +72,7 @@ export function AuthProvider({ children }) {
 
   const value = {
     user,
+    token,
     isAuthenticated: Boolean(user),
     login,
     register,
