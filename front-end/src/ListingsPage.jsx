@@ -5,6 +5,8 @@ import MainNav from './MainNav'
 import { useListings } from './hooks/useListings'
 import './ListingsPage.css'
 
+
+
 const BHK_OPTIONS = [
   { key: 'studio', label: 'Studio' },
   { key: '1', label: '1 BHK' },
@@ -67,12 +69,13 @@ function toggleListValue(list, value) {
 }
 
 function ListingsPage() {
-  const { listings, loading, error } = useListings()
+  // const { listings, loading, error } = useListings()
+  const { listings, loading, error, savedIds, toggleSaved } = useListings()
   const areaOptions = useMemo(
     () => [...new Set(listings.map((l) => l.area))].sort(),
     [listings],
   )
-  const [savedIds, setSavedIds] = useState(() => new Set())
+  // const [savedIds, setSavedIds] = useState(() => new Set())
   const [searchQuery, setSearchQuery] = useState('')
   const [appliedFilters, setAppliedFilters] = useState(() => cloneFilters(DEFAULT_FILTERS))
   const [filterOpen, setFilterOpen] = useState(false)
@@ -97,14 +100,14 @@ function ListingsPage() {
     [listings, searchQuery, appliedFilters],
   )
 
-  function toggleSaved(id) {
-    setSavedIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
+  // function toggleSaved(id) {
+  //   setSavedIds((prev) => {
+  //     const next = new Set(prev)
+  //     if (next.has(id)) next.delete(id)
+  //     else next.add(id)
+  //     return next
+  //   })
+  // }
 
   function applyFilters() {
     setAppliedFilters(cloneFilters(draftFilters))
@@ -217,8 +220,16 @@ function ListingsPage() {
                   price={listing.price}
                   rating={listing.rating}
                   details={listing.details}
-                  saved={savedIds.has(listing.id)}
-                  onFavoriteToggle={() => toggleSaved(listing.id)}
+                  // saved={savedIds.has(listing.id)}
+                  // saved={savedIds.includes(listing.id)}
+                  // onFavoriteToggle={() => toggleSaved(listing.id)}
+
+                  saved={savedIds.includes(listing.id)}
+                  onFavoriteToggle={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    toggleSaved(listing.id)
+                  }}
                 />
               </div>
             ))}
