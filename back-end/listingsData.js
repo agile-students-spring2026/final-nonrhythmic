@@ -40,6 +40,7 @@ function buildListing(id) {
   const area = AREAS[id % AREAS.length]
   const rentUsd = 850 + (id % 20) * 75
   const rating = (4 + (id % 10) / 10).toFixed(1)
+  const reviewCount = 8 + (id % 18)
   const title = SUBLEASE_TITLES[id % SUBLEASE_TITLES.length]
   const name = title.length > 72 ? `${title.slice(0, 69)}…` : title
   const details = BHK_DETAILS[bhk] ?? 'Sublease'
@@ -51,6 +52,7 @@ function buildListing(id) {
     location: area,
     price: `$${rentUsd.toLocaleString('en-US')}/mo`,
     rating,
+    reviewCount,
     details,
     bhk,
     area,
@@ -60,6 +62,6 @@ function buildListing(id) {
   }
 }
 
-const listings = Array.from({ length: 40 }).map((_, idx) => buildListing(idx + 1))
+const listings = Array.from({ length: 5 }).map((_, idx) => buildListing(idx + 1))
 
 module.exports = listings

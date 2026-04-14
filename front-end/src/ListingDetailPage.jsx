@@ -146,7 +146,14 @@ function ListingDetailInner({ id }) {
     )
   }
 
-  const reviewCount = 12 + (listing.id % 40)
+  const numericReviewCount = Number(listing.reviewCount)
+  const hasReviews = Number.isFinite(numericReviewCount) && numericReviewCount > 0
+  const hasRating = listing.rating !== null && listing.rating !== undefined && String(listing.rating).trim() !== ''
+  const ratingSummary = hasReviews
+    ? hasRating
+      ? `★ ${listing.rating} · ${numericReviewCount} reviews`
+      : `${numericReviewCount} reviews`
+    : 'No reviews yet'
 
   const images = [
     'https://picsum.photos/id/1018/960/600',
@@ -230,9 +237,7 @@ function ListingDetailInner({ id }) {
             </button>
           </div>
 
-          <p className="listing-detail-rating">
-            ★ {listing.rating} · {reviewCount} reviews
-          </p>
+          <p className="listing-detail-rating">{ratingSummary}</p>
           <p className="listing-detail-location">
             {listing.location} · {listing.details}
           </p>

@@ -69,7 +69,6 @@ function AddListingPage() {
           name: form.name || 'New Listing',
           location: form.sublessorAddress || 'New York',
           price: monthlyPrice,
-          rating: 4.5,
           details: formatWindow(form.sublessorFrom, form.sublessorTo),
           description: form.sublessorDetails || 'New sublease listing',
           owner: actorName,
