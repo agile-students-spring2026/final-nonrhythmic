@@ -1,12 +1,15 @@
 // import { useMemo, useState } from 'react'
 import { useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import ListingCard from './ListingCard'
 import MainNav from './MainNav'
+import { useAuth } from './hooks/useAuth'
 import { useListings } from './hooks/useListings'
 import './SavedPage.css'
 
 function SavedPage() {
+  const navigate = useNavigate()
+  const { user } = useAuth()
   // const { listings, loading } = useListings()
   const { listings, loading, savedIds, toggleSaved } = useListings()
 
@@ -75,10 +78,14 @@ function SavedPage() {
                   // saved={savedIds.has(listing.id)}
                   // onFavoriteToggle={() => toggleSaved(listing.id)}
                   saved={savedIds.includes(listing.id)}
-                  onFavoriteToggle={(e) => {
+                  onFavoriteToggle={async (e) => {
                     e.preventDefault()
                     e.stopPropagation()
-                    toggleSaved(listing.id)
+                    if (!user) {
+                      navigate('/login')
+                      return
+                    }
+                    await toggleSaved(listing.id)
                   }}
                   />
               </div>

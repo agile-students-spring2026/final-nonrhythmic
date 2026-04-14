@@ -172,6 +172,7 @@ app.post('/api/listings', (req, res) => {
     location,
     price,
     rating,
+    reviewCount,
     details,
     description,
     owner,
@@ -204,7 +205,8 @@ app.post('/api/listings', (req, res) => {
     rating:
       typeof rating === 'number' || typeof rating === 'string'
         ? String(rating)
-        : '4.5',
+        : null,
+    reviewCount: Number.isFinite(Number(reviewCount)) ? Math.max(0, Number(reviewCount)) : 0,
     details: details ? String(details).trim() : 'Private room · shared unit',
     description: description ? String(description).trim() : 'No description provided yet.',
     owner: normalizedOwner?.owner ?? 'Kaiyuan Wu',

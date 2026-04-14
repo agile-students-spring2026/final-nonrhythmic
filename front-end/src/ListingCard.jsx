@@ -9,7 +9,7 @@ function ListingCard({
   to,
   saved = false,
   onFavoriteToggle,
-  rating = '4.5',
+  rating = null,
   details = '2 bed · 1 bath',
   showFavorite = true,
 }) {
@@ -31,6 +31,7 @@ function ListingCard({
     )
 
   if (variant === 'feed') {
+    const hasRating = rating !== null && rating !== undefined && String(rating).trim() !== ''
     return (
       <div className={rootClass}>
         <Link to={to} className="listing-card__tap">
@@ -38,7 +39,7 @@ function ListingCard({
           <div className="listing-info">
             <div className="listing-top">
               <p className="listing-name">{name}</p>
-              <p className="listing-rating">★ {rating}</p>
+              <p className="listing-rating">{hasRating ? `★ ${rating}` : 'No reviews yet'}</p>
             </div>
             <p className="listing-location">{location}</p>
             <p className="listing-details">{details}</p>

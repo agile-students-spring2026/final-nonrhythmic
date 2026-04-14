@@ -1,7 +1,9 @@
 import { useEffect, useId, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import ListingCard from './ListingCard'
 import MainNav from './MainNav'
+import { useAuth } from './hooks/useAuth'
 import { useListings } from './hooks/useListings'
 import './ListingsPage.css'
 
@@ -69,6 +71,8 @@ function toggleListValue(list, value) {
 }
 
 function ListingsPage() {
+  const navigate = useNavigate()
+  const { user } = useAuth()
   // const { listings, loading, error } = useListings()
   const { listings, loading, error, savedIds, toggleSaved } = useListings()
   const areaOptions = useMemo(
@@ -225,10 +229,14 @@ function ListingsPage() {
                   // onFavoriteToggle={() => toggleSaved(listing.id)}
 
                   saved={savedIds.includes(listing.id)}
-                  onFavoriteToggle={(e) => {
+                  onFavoriteToggle={async (e) => {
                     e.preventDefault()
                     e.stopPropagation()
-                    toggleSaved(listing.id)
+                    if (!user) {
+                      navigate('/login')
+                      return
+                    }
+                    await toggleSaved(listing.id)
                   }}
                 />
               </div>
