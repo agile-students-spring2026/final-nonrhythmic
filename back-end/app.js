@@ -1,6 +1,8 @@
 const path = require('node:path')
 const express = require('express')
 const cors = require('cors')
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
 const seedListings = require('./listingsData')
 const seedTenants = require('./tenantsData')
 
@@ -8,6 +10,9 @@ const app = express()
 
 app.use(cors())
 app.use(express.json())
+
+const PASSWORD_SALT_ROUNDS = 10
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-only-secret-change-in-production'
 
 function publicUser(user) {
   return {
@@ -23,15 +28,47 @@ function defaultBio(name) {
   return `${name} is looking for a clean and safe place near campus with good transit access.`
 }
 
-function buildUser({ id, name, email, password, bio, avatarSeed }) {
+function buildUser({ id, name, email, passwordHash, bio, avatarSeed }) {
   return {
     id,
     name,
     email,
-    password,
+    passwordHash,
     bio: bio || defaultBio(name),
     avatarSeed: avatarSeed || `subvet-user-${id}`,
   }
+}
+
+function signAuthToken(user) {
+  return jwt.sign({ sub: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' })
+}
+
+function requireAuth(req, res, next) {
+  const authHeader = String(req.headers.authorization ?? '')
+  if (!authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Authorization token is required' })
+  }
+
+  const token = authHeader.slice('Bearer '.length).trim()
+  if (!token) {
+    return res.status(401).json({ error: 'Authorization token is required' })
+  }
+
+  try {
+    const payload = jwt.verify(token, JWT_SECRET)
+    req.auth = { userId: String(payload.sub ?? '') }
+    return next()
+  } catch {
+    return res.status(401).json({ error: 'Invalid or expired token' })
+  }
+}
+
+function requireAuthForUserParam(req, res, next) {
+  const requestedUserId = String(req.params.id)
+  if (req.auth?.userId !== requestedUserId) {
+    return res.status(403).json({ error: 'Forbidden for this user' })
+  }
+  return next()
 }
 
 let users = [
@@ -39,7 +76,7 @@ let users = [
     id: 'demo',
     name: 'Kaiyuan Wu',
     email: 'demo@subvet.app',
-    password: 'password123',
+    passwordHash: bcrypt.hashSync('password123', PASSWORD_SALT_ROUNDS),
     bio: 'Hi, I am looking for a clean and safe place near campus. I prefer a quiet environment and easy access to public transportation.',
     avatarSeed: 'subvet-profile-demo',
   }),
@@ -113,7 +150,7 @@ app.get('/api/listings/:id', (req, res) => {
   return res.json(listing)
 })
 
-app.get('/api/users/:id/saved-listings', (req, res) => {
+app.get('/api/users/:id/saved-listings', requireAuth, requireAuthForUserParam, (req, res) => {
   const userId = String(req.params.id)
 
   const savedIds = savedListings
@@ -125,7 +162,7 @@ app.get('/api/users/:id/saved-listings', (req, res) => {
   res.json(saved)
 })
 
-app.post('/api/users/:id/saved-listings', (req, res) => {
+app.post('/api/users/:id/saved-listings', requireAuth, requireAuthForUserParam, (req, res) => {
   const userId = String(req.params.id)
   const listingId = Number(req.body.listingId)
 
@@ -150,7 +187,7 @@ app.post('/api/users/:id/saved-listings', (req, res) => {
   res.status(201).json({ ok: true })
 })
 
-app.delete('/api/users/:id/saved-listings/:listingId', (req, res) => {
+app.delete('/api/users/:id/saved-listings/:listingId', requireAuth, requireAuthForUserParam, (req, res) => {
   const userId = String(req.params.id)
   const listingId = Number(req.params.listingId)
 
@@ -274,7 +311,7 @@ app.post('/api/tenants', (req, res) => {
   return res.status(201).json(tenant)
 })
 
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
   const email = normalizeEmail(req.body?.email)
   const password = String(req.body?.password ?? '')
 
@@ -283,27 +320,27 @@ app.post('/api/auth/login', (req, res) => {
   }
 
   const existing = users.find((user) => user.email === email)
-  if (existing && existing.password !== password) {
-    return res.status(401).json({ error: 'Incorrect password' })
+  if (existing) {
+    const isValidPassword = await bcrypt.compare(password, existing.passwordHash)
+    if (!isValidPassword) {
+      return res.status(401).json({ error: 'Incorrect password' })
+    }
+    return res.json({ ok: true, user: publicUser(existing), token: signAuthToken(existing) })
   }
 
-  const user =
-    existing ??
-    buildUser({
-      id: nextUserId(),
-      name: email.split('@')[0] || 'User',
-      email,
-      password,
-    })
+  const passwordHash = await bcrypt.hash(password, PASSWORD_SALT_ROUNDS)
+  const user = buildUser({
+    id: nextUserId(),
+    name: email.split('@')[0] || 'User',
+    email,
+    passwordHash,
+  })
+  users.push(user)
 
-  if (!existing) {
-    users.push(user)
-  }
-
-  return res.json({ ok: true, user: publicUser(user) })
+  return res.json({ ok: true, user: publicUser(user), token: signAuthToken(user) })
 })
 
-app.post('/api/auth/register', (req, res) => {
+app.post('/api/auth/register', async (req, res) => {
   const name = String(req.body?.name ?? '').trim()
   const email = normalizeEmail(req.body?.email)
   const password = String(req.body?.password ?? '')
@@ -316,15 +353,16 @@ app.post('/api/auth/register', (req, res) => {
     return res.status(409).json({ error: 'An account with this email already exists' })
   }
 
+  const passwordHash = await bcrypt.hash(password, PASSWORD_SALT_ROUNDS)
   const user = buildUser({
     id: nextUserId(),
     name,
     email,
-    password,
+    passwordHash,
   })
 
   users.push(user)
-  return res.status(201).json({ ok: true, user: publicUser(user) })
+  return res.status(201).json({ ok: true, user: publicUser(user), token: signAuthToken(user) })
 })
 
 app.get('/api/users/:id', (req, res) => {
@@ -339,7 +377,7 @@ app.get('/api/users/:id', (req, res) => {
 
 
 
-app.patch('/api/users/:id', (req, res) => {
+app.patch('/api/users/:id', requireAuth, requireAuthForUserParam, (req, res) => {
   const user = findUserById(req.params.id)
 
   if (!user) {
@@ -387,7 +425,7 @@ app.patch('/api/users/:id', (req, res) => {
   return res.json(publicUser(user))
 })
 
-app.post('/api/applications', (req, res) => {
+app.post('/api/applications', requireAuth, (req, res) => {
   const listingId = Number(req.body?.listingId)
   const userId = String(req.body?.userId ?? '')
   const listing = listings.find((item) => item.id === listingId)
@@ -395,6 +433,10 @@ app.post('/api/applications', (req, res) => {
 
   if (!Number.isFinite(listingId) || !userId) {
     return badRequest(res, 'listingId and userId are required')
+  }
+
+  if (req.auth?.userId !== userId) {
+    return res.status(403).json({ error: 'Forbidden for this user' })
   }
 
   if (!listing) {
@@ -416,13 +458,17 @@ app.post('/api/applications', (req, res) => {
   return res.status(201).json({ ok: true, application })
 })
 
-app.post('/api/contact-requests', (req, res) => {
+app.post('/api/contact-requests', requireAuth, (req, res) => {
   const targetType = String(req.body?.targetType ?? '')
   const targetId = String(req.body?.targetId ?? '')
   const userId = String(req.body?.userId ?? '')
 
   if (!targetType || !targetId || !userId) {
     return badRequest(res, 'targetType, targetId, and userId are required')
+  }
+
+  if (req.auth?.userId !== userId) {
+    return res.status(403).json({ error: 'Forbidden for this user' })
   }
 
   if (!findUserById(userId)) {
