@@ -1,6 +1,10 @@
 const { expect } = require('chai')
 const request = require('supertest')
+const mongoose = require('mongoose')
+require('dotenv').config()
+
 const app = require('../app')
+const Listing = require('../models/Listing')
 
 describe('Back-end API', () => {
   const uniqueSuffix = Date.now()
@@ -8,6 +12,20 @@ describe('Back-end API', () => {
   let createdUserId = null
   let createdListingId = null
   let authToken = null
+
+  before(async () => {
+    if (mongoose.connection.readyState === 0) {
+      await mongoose.connect(process.env.MONGO_URI)
+    }
+  })
+
+  after(async () => {
+    if (createdListingId !== null) {
+      await Listing.deleteOne({ id: createdListingId })
+    }
+
+    await mongoose.connection.close()
+  })
 
   it('returns health status from /health', async () => {
     const res = await request(app).get('/health')

@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const seedListings = require('./listingsData')
 const seedTenants = require('./tenantsData')
+const Listing = require('./models/Listing')
 
 const app = express()
 
@@ -82,12 +83,6 @@ let users = [
   }),
 ]
 
-let listings = seedListings.map((listing, index) => ({
-  ...listing,
-  ownerId: index < 2 ? 'demo' : null,
-  owner: index < 2 ? 'Kaiyuan Wu' : 'Other User',
-}))
-
 let tenants = seedTenants.map((tenant) => ({ ...tenant }))
 let applications = []
 let contactRequests = []
@@ -132,59 +127,112 @@ function normalizeListingOwner({ ownerId, owner }) {
   }
 }
 
+async function nextListingId() {
+  const last = await Listing.findOne().sort({ id: -1 }).lean()
+  return last?.id ? Number(last.id) + 1 : 1
+}
+
+async function ensureListingsSeeded() {
+  const count = await Listing.countDocuments()
+  if (count > 0) return
+
+  const docs = seedListings.map((listing, index) => ({
+    id: index + 1,
+    name: listing.name,
+    location: listing.location,
+    price: listing.price,
+    rating:
+      typeof listing.rating === 'number' || typeof listing.rating === 'string'
+        ? String(listing.rating)
+        : null,
+    reviewCount: Number.isFinite(Number(listing.reviewCount)) ? Math.max(0, Number(listing.reviewCount)) : 0,
+    details: listing.details || 'Private room · shared unit',
+    description: listing.description || 'No description provided yet.',
+    ownerId: index < 2 ? 'demo' : null,
+    owner: index < 2 ? 'Kaiyuan Wu' : 'Other User',
+    bhk: listing.bhk ? String(listing.bhk) : 'room',
+    area: listing.area ? String(listing.area).trim() : String(listing.location).trim(),
+    rentUsd: Number.isFinite(Number(listing.rentUsd)) ? Number(listing.rentUsd) : null,
+    mapQuery: listing.mapQuery
+      ? String(listing.mapQuery).trim()
+      : `${String(listing.location).trim()}, New York, NY`,
+  }))
+
+  if (docs.length > 0) {
+    await Listing.insertMany(docs)
+  }
+}
+
 app.get('/health', (req, res) => res.json({ ok: true }))
 app.get('/api/health', (req, res) => res.json({ ok: true }))
 
-app.get('/api/listings', (req, res) => {
-  res.json(listings)
+app.get('/api/listings', async (req, res) => {
+  try {
+    const listings = await Listing.find().sort({ id: 1 }).lean()
+    res.json(listings)
+  } catch {
+    res.status(500).json({ error: 'Failed to load listings' })
+  }
 })
 
-app.get('/api/listings/:id', (req, res) => {
-  const id = Number(req.params.id)
-  const listing = listings.find((item) => item.id === id)
+app.get('/api/listings/:id', async (req, res) => {
+  try {
+    const id = Number(req.params.id)
+    const listing = await Listing.findOne({ id }).lean()
 
-  if (!listing) {
-    return res.status(404).json({ error: 'Listing not found' })
+    if (!listing) {
+      return res.status(404).json({ error: 'Listing not found' })
+    }
+
+    return res.json(listing)
+  } catch {
+    return res.status(500).json({ error: 'Failed to load listing' })
   }
-
-  return res.json(listing)
 })
 
-app.get('/api/users/:id/saved-listings', requireAuth, requireAuthForUserParam, (req, res) => {
-  const userId = String(req.params.id)
+app.get('/api/users/:id/saved-listings', requireAuth, requireAuthForUserParam, async (req, res) => {
+  try {
+    const userId = String(req.params.id)
 
-  const savedIds = savedListings
-    .filter((item) => item.userId === userId)
-    .map((item) => item.listingId)
+    const savedIds = savedListings
+      .filter((item) => item.userId === userId)
+      .map((item) => item.listingId)
 
-  const saved = listings.filter((listing) => savedIds.includes(listing.id))
+    const saved = await Listing.find({ id: { $in: savedIds } }).sort({ id: 1 }).lean()
 
-  res.json(saved)
+    res.json(saved)
+  } catch {
+    res.status(500).json({ error: 'Failed to load saved listings' })
+  }
 })
 
-app.post('/api/users/:id/saved-listings', requireAuth, requireAuthForUserParam, (req, res) => {
-  const userId = String(req.params.id)
-  const listingId = Number(req.body.listingId)
+app.post('/api/users/:id/saved-listings', requireAuth, requireAuthForUserParam, async (req, res) => {
+  try {
+    const userId = String(req.params.id)
+    const listingId = Number(req.body.listingId)
 
-  if (!listingId) {
-    return res.status(400).json({ error: 'listingId is required' })
+    if (!listingId) {
+      return res.status(400).json({ error: 'listingId is required' })
+    }
+
+    const listing = await Listing.findOne({ id: listingId }).lean()
+    if (!listing) {
+      return res.status(404).json({ error: 'Listing not found' })
+    }
+
+    const alreadySaved = savedListings.some(
+      (item) => item.userId === userId && item.listingId === listingId
+    )
+
+    if (alreadySaved) {
+      return res.status(200).json({ ok: true, message: 'Already saved' })
+    }
+
+    savedListings.push({ userId, listingId })
+    res.status(201).json({ ok: true })
+  } catch {
+    res.status(500).json({ error: 'Failed to save listing' })
   }
-
-  const listing = listings.find((item) => item.id === listingId)
-  if (!listing) {
-    return res.status(404).json({ error: 'Listing not found' })
-  }
-
-  const alreadySaved = savedListings.some(
-    (item) => item.userId === userId && item.listingId === listingId
-  )
-
-  if (alreadySaved) {
-    return res.status(200).json({ ok: true, message: 'Already saved' })
-  }
-
-  savedListings.push({ userId, listingId })
-  res.status(201).json({ ok: true })
 })
 
 app.delete('/api/users/:id/saved-listings/:listingId', requireAuth, requireAuthForUserParam, (req, res) => {
@@ -203,59 +251,62 @@ app.delete('/api/users/:id/saved-listings/:listingId', requireAuth, requireAuthF
   res.json({ ok: true })
 })
 
-app.post('/api/listings', (req, res) => {
-  const {
-    name,
-    location,
-    price,
-    rating,
-    reviewCount,
-    details,
-    description,
-    owner,
-    ownerId,
-    bhk,
-    area,
-    rentUsd,
-    mapQuery,
-  } = req.body ?? {}
+app.post('/api/listings', async (req, res) => {
+  try {
+    const {
+      name,
+      location,
+      price,
+      rating,
+      reviewCount,
+      details,
+      description,
+      owner,
+      ownerId,
+      bhk,
+      area,
+      rentUsd,
+      mapQuery,
+    } = req.body ?? {}
 
-  if (!name || !location || !price) {
-    return badRequest(res, 'name, location, and price are required')
+    if (!name || !location || !price) {
+      return badRequest(res, 'name, location, and price are required')
+    }
+
+    const normalizedOwner = normalizeListingOwner({
+      ownerId: ownerId ? String(ownerId) : null,
+      owner,
+    })
+
+    if (ownerId && !normalizedOwner) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    const normalizedRent = Number(rentUsd)
+    const listing = await Listing.create({
+      id: await nextListingId(),
+      name: String(name).trim(),
+      location: String(location).trim(),
+      price: String(price).trim(),
+      rating:
+        typeof rating === 'number' || typeof rating === 'string'
+          ? String(rating)
+          : null,
+      reviewCount: Number.isFinite(Number(reviewCount)) ? Math.max(0, Number(reviewCount)) : 0,
+      details: details ? String(details).trim() : 'Private room · shared unit',
+      description: description ? String(description).trim() : 'No description provided yet.',
+      owner: normalizedOwner?.owner ?? 'Kaiyuan Wu',
+      ownerId: normalizedOwner?.ownerId ?? null,
+      bhk: bhk ? String(bhk) : 'room',
+      area: area ? String(area).trim() : String(location).trim(),
+      rentUsd: Number.isFinite(normalizedRent) ? normalizedRent : null,
+      mapQuery: mapQuery ? String(mapQuery).trim() : `${String(location).trim()}, New York, NY`,
+    })
+
+    return res.status(201).json(listing)
+  } catch {
+    return res.status(500).json({ error: 'Failed to create listing' })
   }
-
-  const normalizedOwner = normalizeListingOwner({
-    ownerId: ownerId ? String(ownerId) : null,
-    owner,
-  })
-
-  if (ownerId && !normalizedOwner) {
-    return res.status(404).json({ error: 'User not found' })
-  }
-
-  const normalizedRent = Number(rentUsd)
-  const listing = {
-    id: nextNumericId(listings),
-    name: String(name).trim(),
-    location: String(location).trim(),
-    price: String(price).trim(),
-    rating:
-      typeof rating === 'number' || typeof rating === 'string'
-        ? String(rating)
-        : null,
-    reviewCount: Number.isFinite(Number(reviewCount)) ? Math.max(0, Number(reviewCount)) : 0,
-    details: details ? String(details).trim() : 'Private room · shared unit',
-    description: description ? String(description).trim() : 'No description provided yet.',
-    owner: normalizedOwner?.owner ?? 'Kaiyuan Wu',
-    ownerId: normalizedOwner?.ownerId ?? null,
-    bhk: bhk ? String(bhk) : 'room',
-    area: area ? String(area).trim() : String(location).trim(),
-    rentUsd: Number.isFinite(normalizedRent) ? normalizedRent : null,
-    mapQuery: mapQuery ? String(mapQuery).trim() : `${String(location).trim()}, New York, NY`,
-  }
-
-  listings.push(listing)
-  return res.status(201).json(listing)
 })
 
 app.get('/api/tenants', (req, res) => {
@@ -375,9 +426,7 @@ app.get('/api/users/:id', (req, res) => {
   return res.json(publicUser(user))
 })
 
-
-
-app.patch('/api/users/:id', requireAuth, requireAuthForUserParam, (req, res) => {
+app.patch('/api/users/:id', requireAuth, requireAuthForUserParam, async (req, res) => {
   const user = findUserById(req.params.id)
 
   if (!user) {
@@ -410,25 +459,26 @@ app.patch('/api/users/:id', requireAuth, requireAuthForUserParam, (req, res) => 
   user.bio = nextBio
   user.avatarSeed = nextAvatarSeed
 
-  listings = listings.map((listing) => {
-    if (listing.ownerId === user.id) {
-      return { ...listing, owner: user.name }
-    }
+  try {
+    await Listing.updateMany(
+      { ownerId: user.id },
+      { $set: { owner: user.name } },
+    )
 
-    if (!listing.ownerId && listing.owner === previousName) {
-      return { ...listing, owner: user.name }
-    }
-
-    return listing
-  })
+    await Listing.updateMany(
+      { $or: [{ ownerId: null }, { ownerId: '' }], owner: previousName },
+      { $set: { owner: user.name } },
+    )
+  } catch {
+    return res.status(500).json({ error: 'Failed to sync listing owner names' })
+  }
 
   return res.json(publicUser(user))
 })
 
-app.post('/api/applications', requireAuth, (req, res) => {
+app.post('/api/applications', requireAuth, async (req, res) => {
   const listingId = Number(req.body?.listingId)
   const userId = String(req.body?.userId ?? '')
-  const listing = listings.find((item) => item.id === listingId)
   const user = findUserById(userId)
 
   if (!Number.isFinite(listingId) || !userId) {
@@ -439,6 +489,7 @@ app.post('/api/applications', requireAuth, (req, res) => {
     return res.status(403).json({ error: 'Forbidden for this user' })
   }
 
+  const listing = await Listing.findOne({ id: listingId }).lean()
   if (!listing) {
     return res.status(404).json({ error: 'Listing not found' })
   }
@@ -458,7 +509,7 @@ app.post('/api/applications', requireAuth, (req, res) => {
   return res.status(201).json({ ok: true, application })
 })
 
-app.post('/api/contact-requests', requireAuth, (req, res) => {
+app.post('/api/contact-requests', requireAuth, async (req, res) => {
   const targetType = String(req.body?.targetType ?? '')
   const targetId = String(req.body?.targetId ?? '')
   const userId = String(req.body?.userId ?? '')
@@ -476,7 +527,7 @@ app.post('/api/contact-requests', requireAuth, (req, res) => {
   }
 
   if (targetType === 'listing') {
-    const listing = listings.find((item) => item.id === Number(targetId))
+    const listing = await Listing.findOne({ id: Number(targetId) }).lean()
     if (!listing) return res.status(404).json({ error: 'Listing not found' })
   } else if (targetType === 'tenant') {
     const tenant = tenants.find((item) => item.id === targetId)
@@ -506,6 +557,10 @@ app.use((req, res) => {
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal Server Error' })
+})
+
+ensureListingsSeeded().catch((err) => {
+  console.error('Failed to seed listings:', err)
 })
 
 module.exports = app
