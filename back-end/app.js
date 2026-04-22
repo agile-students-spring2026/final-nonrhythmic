@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const seedListings = require('./listingsData')
 const seedTenants = require('./tenantsData')
-
+const Listing = require('./models/Listing')
 const app = express()
 
 app.use(cors())
