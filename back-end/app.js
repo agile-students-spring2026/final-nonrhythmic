@@ -19,7 +19,7 @@ app.use(cors())
 app.use(express.json())
 
 const PASSWORD_SALT_ROUNDS = 10
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-only-secret-change-in-production'
+const JWT_SECRET = process.env.JWT_SECRET
 
 function publicUser(user) {
   return {
