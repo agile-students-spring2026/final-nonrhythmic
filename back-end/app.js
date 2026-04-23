@@ -3,12 +3,15 @@ const express = require('express')
 const cors = require('cors')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+const { body, param, validationResult } = require('express-validator')
 const seedListings = require('./listingsData')
 const seedTenants = require('./tenantsData')
-const Listing = require('./models/Listing')
-const User = require('./models/User')
-const Tenant = require('./models/Tenant')
 const Application = require('./models/Application')
+const ContactRequest = require('./models/ContactRequest')
+const Listing = require('./models/Listing')
+const SavedListing = require('./models/SavedListing')
+const Tenant = require('./models/Tenant')
+const User = require('./models/User')
 
 const app = express()
 
@@ -47,6 +50,174 @@ function signAuthToken(user) {
   return jwt.sign({ sub: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' })
 }
 
+function badRequest(res, message) {
+  return res.status(400).json({ error: message })
+}
+
+function hasText(value) {
+  if (value === undefined || value === null) return false
+  return String(value).trim() !== ''
+}
+
+function sanitizeText(value) {
+  return String(value).trim()
+}
+
+function requiredTextBody(field, message = `${field} is required`) {
+  return body(field)
+    .custom((value) => hasText(value))
+    .withMessage(message)
+    .bail()
+    .customSanitizer(sanitizeText)
+}
+
+function optionalTextBody(field, message = `${field} cannot be empty`) {
+  return body(field)
+    .optional({ values: 'undefined' })
+    .custom((value) => hasText(value))
+    .withMessage(message)
+    .bail()
+    .customSanitizer(sanitizeText)
+}
+
+function requiredTextParam(field, message = `${field} is required`) {
+  return param(field)
+    .custom((value) => hasText(value))
+    .withMessage(message)
+    .bail()
+    .customSanitizer(sanitizeText)
+}
+
+function handleValidationErrors(req, res, next) {
+  const result = validationResult(req)
+  if (result.isEmpty()) {
+    return next()
+  }
+
+  return badRequest(res, result.array({ onlyFirstError: true })[0].msg)
+}
+
+function validate(rules) {
+  return [...rules, handleValidationErrors]
+}
+
+const userIdParamValidation = validate([requiredTextParam('id', 'userId is required')])
+const listingIdParamValidation = validate([
+  param('listingId')
+    .isInt({ min: 1 })
+    .withMessage('listingId must be a positive integer')
+    .toInt(),
+])
+
+const createListingValidation = validate([
+  requiredTextBody('name'),
+  requiredTextBody('location'),
+  requiredTextBody('price'),
+  optionalTextBody('owner'),
+  optionalTextBody('ownerId'),
+  optionalTextBody('details'),
+  optionalTextBody('description'),
+  optionalTextBody('bhk'),
+  optionalTextBody('area'),
+  optionalTextBody('mapQuery'),
+  body('rating')
+    .optional({ values: 'undefined' })
+    .custom((value) => hasText(value))
+    .withMessage('rating cannot be empty')
+    .bail()
+    .customSanitizer(sanitizeText),
+  body('reviewCount')
+    .optional({ values: 'undefined' })
+    .isInt({ min: 0 })
+    .withMessage('reviewCount must be a non-negative integer')
+    .toInt(),
+  body('rentUsd')
+    .optional({ values: 'undefined' })
+    .isFloat({ min: 0 })
+    .withMessage('rentUsd must be a non-negative number')
+    .toFloat(),
+])
+
+const createTenantValidation = validate([
+  requiredTextBody('displayName'),
+  body('age')
+    .custom((value) => hasText(value))
+    .withMessage('age is required')
+    .bail()
+    .isInt({ min: 1 })
+    .withMessage('age must be a positive integer')
+    .toInt(),
+  requiredTextBody('neighborhoods'),
+  requiredTextBody('subleaseWindow'),
+  optionalTextBody('budget'),
+  optionalTextBody('intro'),
+  optionalTextBody('ideal'),
+  optionalTextBody('questions'),
+  optionalTextBody('company'),
+])
+
+const loginValidation = validate([
+  requiredTextBody('email'),
+  body('email').isEmail().withMessage('email must be valid').normalizeEmail(),
+  requiredTextBody('password'),
+])
+
+const registerValidation = validate([
+  requiredTextBody('name'),
+  requiredTextBody('email'),
+  body('email').isEmail().withMessage('email must be valid').normalizeEmail(),
+  requiredTextBody('password'),
+])
+
+const updateUserValidation = validate([
+  optionalTextBody('name', 'name cannot be empty'),
+  optionalTextBody('bio', 'bio cannot be empty'),
+  optionalTextBody('avatarSeed', 'avatarSeed cannot be empty'),
+])
+
+const applicationValidation = validate([
+  body('listingId')
+    .custom((value) => hasText(value))
+    .withMessage('listingId is required')
+    .bail()
+    .isInt({ min: 1 })
+    .withMessage('listingId must be a positive integer')
+    .toInt(),
+  requiredTextBody('userId'),
+])
+
+const contactRequestValidation = validate([
+  body('targetType')
+    .custom((value) => hasText(value))
+    .withMessage('targetType is required')
+    .bail()
+    .isIn(['listing', 'tenant'])
+    .withMessage('targetType must be "listing" or "tenant"')
+    .customSanitizer(sanitizeText),
+  requiredTextBody('targetId'),
+  body('targetId').custom((value, { req }) => {
+    if (req.body?.targetType !== 'listing') return true
+
+    const numericTargetId = Number(value)
+    if (!Number.isInteger(numericTargetId) || numericTargetId < 1) {
+      throw new Error('targetId must be a positive integer for listing requests')
+    }
+
+    return true
+  }),
+  requiredTextBody('userId'),
+])
+
+const saveListingValidation = validate([
+  body('listingId')
+    .custom((value) => hasText(value))
+    .withMessage('listingId is required')
+    .bail()
+    .isInt({ min: 1 })
+    .withMessage('listingId must be a positive integer')
+    .toInt(),
+])
+
 function requireAuth(req, res, next) {
   const authHeader = String(req.headers.authorization ?? '')
   if (!authHeader.startsWith('Bearer ')) {
@@ -75,13 +246,6 @@ function requireAuthForUserParam(req, res, next) {
   return next()
 }
 
-let contactRequests = []
-let savedListings = [{ userId: 'demo', listingId: 1 }]
-
-function badRequest(res, message) {
-  return res.status(400).json({ error: message })
-}
-
 function normalizeEmail(email) {
   return String(email ?? '')
     .trim()
@@ -99,11 +263,13 @@ function nextUserId() {
 async function nextTenantId() {
   const last = await Tenant.findOne().sort({ createdAt: -1 }).lean()
   if (!last) return '1'
+
   const allIds = await Tenant.find({}, { id: 1 }).lean()
   const max = allIds.reduce((acc, item) => {
     const n = Number(item.id)
     return Number.isFinite(n) && n > acc ? n : acc
   }, 0)
+
   return String(max + 1)
 }
 
@@ -142,7 +308,8 @@ async function ensureListingsSeeded() {
       typeof listing.rating === 'number' || typeof listing.rating === 'string'
         ? String(listing.rating)
         : null,
-    reviewCount: Number.isFinite(Number(listing.reviewCount)) ? Math.max(0, Number(listing.reviewCount)) : 0,
+    reviewCount:
+      Number.isFinite(Number(listing.reviewCount)) ? Math.max(0, Number(listing.reviewCount)) : 0,
     details: listing.details || 'Private room · shared unit',
     description: listing.description || 'No description provided yet.',
     ownerId: index < 2 ? 'demo' : null,
@@ -187,6 +354,25 @@ async function ensureTenantsSeeded() {
   }
 }
 
+async function ensureSavedListingsSeeded() {
+  const count = await SavedListing.countDocuments()
+  if (count > 0) return
+
+  const demoUser = await User.findOne({ id: 'demo' }).lean()
+  const demoListing = await Listing.findOne({ id: 1 }).lean()
+
+  if (!demoUser || !demoListing) return
+
+  await SavedListing.create({ userId: demoUser.id, listingId: demoListing.id })
+}
+
+async function ensureSeedData() {
+  await ensureUsersSeeded()
+  await ensureListingsSeeded()
+  await ensureTenantsSeeded()
+  await ensureSavedListingsSeeded()
+}
+
 app.get('/health', (req, res) => res.json({ ok: true }))
 app.get('/api/health', (req, res) => res.json({ ok: true }))
 
@@ -214,68 +400,81 @@ app.get('/api/listings/:id', async (req, res) => {
   }
 })
 
-app.get('/api/users/:id/saved-listings', requireAuth, requireAuthForUserParam, async (req, res) => {
-  try {
-    const userId = String(req.params.id)
+app.get(
+  '/api/users/:id/saved-listings',
+  requireAuth,
+  userIdParamValidation,
+  requireAuthForUserParam,
+  async (req, res) => {
+    try {
+      const userId = String(req.params.id)
+      const savedItems = await SavedListing.find({ userId }).sort({ createdAt: 1 }).lean()
+      const savedIds = savedItems.map((item) => item.listingId)
+      const saved = await Listing.find({ id: { $in: savedIds } }).sort({ id: 1 }).lean()
 
-    const savedIds = savedListings
-      .filter((item) => item.userId === userId)
-      .map((item) => item.listingId)
-
-    const saved = await Listing.find({ id: { $in: savedIds } }).sort({ id: 1 }).lean()
-
-    res.json(saved)
-  } catch {
-    res.status(500).json({ error: 'Failed to load saved listings' })
-  }
-})
-
-app.post('/api/users/:id/saved-listings', requireAuth, requireAuthForUserParam, async (req, res) => {
-  try {
-    const userId = String(req.params.id)
-    const listingId = Number(req.body.listingId)
-
-    if (!listingId) {
-      return res.status(400).json({ error: 'listingId is required' })
+      res.json(saved)
+    } catch {
+      res.status(500).json({ error: 'Failed to load saved listings' })
     }
+  },
+)
 
-    const listing = await Listing.findOne({ id: listingId }).lean()
-    if (!listing) {
-      return res.status(404).json({ error: 'Listing not found' })
+app.post(
+  '/api/users/:id/saved-listings',
+  requireAuth,
+  userIdParamValidation,
+  requireAuthForUserParam,
+  saveListingValidation,
+  async (req, res) => {
+    try {
+      const userId = String(req.params.id)
+      const listingId = Number(req.body.listingId)
+
+      const listing = await Listing.findOne({ id: listingId }).lean()
+      if (!listing) {
+        return res.status(404).json({ error: 'Listing not found' })
+      }
+
+      const alreadySaved = await SavedListing.findOne({ userId, listingId }).lean()
+      if (alreadySaved) {
+        return res.status(200).json({ ok: true, message: 'Already saved' })
+      }
+
+      await SavedListing.create({ userId, listingId })
+      return res.status(201).json({ ok: true })
+    } catch (err) {
+      if (err && err.code === 11000) {
+        return res.status(200).json({ ok: true, message: 'Already saved' })
+      }
+      return res.status(500).json({ error: 'Failed to save listing' })
     }
+  },
+)
 
-    const alreadySaved = savedListings.some(
-      (item) => item.userId === userId && item.listingId === listingId
-    )
+app.delete(
+  '/api/users/:id/saved-listings/:listingId',
+  requireAuth,
+  userIdParamValidation,
+  listingIdParamValidation,
+  requireAuthForUserParam,
+  async (req, res) => {
+    try {
+      const userId = String(req.params.id)
+      const listingId = Number(req.params.listingId)
 
-    if (alreadySaved) {
-      return res.status(200).json({ ok: true, message: 'Already saved' })
+      const deleted = await SavedListing.findOneAndDelete({ userId, listingId })
+      if (!deleted) {
+        return res.status(404).json({ error: 'Saved listing not found' })
+      }
+
+      return res.json({ ok: true })
+    } catch {
+      return res.status(500).json({ error: 'Failed to remove saved listing' })
     }
+  },
+)
 
-    savedListings.push({ userId, listingId })
-    res.status(201).json({ ok: true })
-  } catch {
-    res.status(500).json({ error: 'Failed to save listing' })
-  }
-})
-
-app.delete('/api/users/:id/saved-listings/:listingId', requireAuth, requireAuthForUserParam, (req, res) => {
-  const userId = String(req.params.id)
-  const listingId = Number(req.params.listingId)
-
-  const before = savedListings.length
-  savedListings = savedListings.filter(
-    (item) => !(item.userId === userId && item.listingId === listingId)
-  )
-
-  if (savedListings.length === before) {
-    return res.status(404).json({ error: 'Saved listing not found' })
-  }
-
-  res.json({ ok: true })
-})
-
-app.post('/api/listings', async (req, res) => {
+app.post('/api/listings', createListingValidation, async (req, res) => {
   try {
     const {
       name,
@@ -292,10 +491,6 @@ app.post('/api/listings', async (req, res) => {
       rentUsd,
       mapQuery,
     } = req.body ?? {}
-
-    if (!name || !location || !price) {
-      return badRequest(res, 'name, location, and price are required')
-    }
 
     const normalizedOwner = await normalizeListingOwner({
       ownerId: ownerId ? String(ownerId) : null,
@@ -356,7 +551,7 @@ app.get('/api/tenants/:id', async (req, res) => {
   }
 })
 
-app.post('/api/tenants', async (req, res) => {
+app.post('/api/tenants', createTenantValidation, async (req, res) => {
   try {
     const {
       displayName,
@@ -369,10 +564,6 @@ app.post('/api/tenants', async (req, res) => {
       questions,
       company,
     } = req.body ?? {}
-
-    if (!displayName || !age || !neighborhoods || !subleaseWindow) {
-      return badRequest(res, 'displayName, age, neighborhoods, and subleaseWindow are required')
-    }
 
     const id = await nextTenantId()
     const tenant = await Tenant.create({
@@ -399,14 +590,10 @@ app.post('/api/tenants', async (req, res) => {
   }
 })
 
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', loginValidation, async (req, res) => {
   try {
     const email = normalizeEmail(req.body?.email)
     const password = String(req.body?.password ?? '')
-
-    if (!email || !password) {
-      return badRequest(res, 'email and password are required')
-    }
 
     const existing = await User.findOne({ email })
     if (existing) {
@@ -433,15 +620,11 @@ app.post('/api/auth/login', async (req, res) => {
   }
 })
 
-app.post('/api/auth/register', async (req, res) => {
+app.post('/api/auth/register', registerValidation, async (req, res) => {
   try {
     const name = String(req.body?.name ?? '').trim()
     const email = normalizeEmail(req.body?.email)
     const password = String(req.body?.password ?? '')
-
-    if (!name || !email || !password) {
-      return badRequest(res, 'name, email, and password are required')
-    }
 
     const duplicate = await User.findOne({ email })
     if (duplicate) {
@@ -467,7 +650,7 @@ app.post('/api/auth/register', async (req, res) => {
   }
 })
 
-app.get('/api/users/:id', async (req, res) => {
+app.get('/api/users/:id', userIdParamValidation, async (req, res) => {
   try {
     const user = await findUserById(req.params.id)
 
@@ -481,65 +664,52 @@ app.get('/api/users/:id', async (req, res) => {
   }
 })
 
-app.patch('/api/users/:id', requireAuth, requireAuthForUserParam, async (req, res) => {
-  try {
-    const user = await findUserById(req.params.id)
+app.patch(
+  '/api/users/:id',
+  requireAuth,
+  userIdParamValidation,
+  requireAuthForUserParam,
+  updateUserValidation,
+  async (req, res) => {
+    try {
+      const user = await findUserById(req.params.id)
 
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' })
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' })
+      }
+
+      const incoming = req.body ?? {}
+      const nextName = incoming.name === undefined ? user.name : String(incoming.name).trim()
+      const nextBio = incoming.bio === undefined ? user.bio : String(incoming.bio).trim()
+      const nextAvatarSeed =
+        incoming.avatarSeed === undefined
+          ? user.avatarSeed
+          : String(incoming.avatarSeed).trim()
+
+      const previousName = user.name
+      user.name = nextName
+      user.bio = nextBio
+      user.avatarSeed = nextAvatarSeed
+      await user.save()
+
+      await Listing.updateMany({ ownerId: user.id }, { $set: { owner: user.name } })
+
+      await Listing.updateMany(
+        { $or: [{ ownerId: null }, { ownerId: '' }], owner: previousName },
+        { $set: { owner: user.name } },
+      )
+
+      return res.json(publicUser(user))
+    } catch {
+      return res.status(500).json({ error: 'Failed to update profile' })
     }
+  },
+)
 
-    const incoming = req.body ?? {}
-    const nextName =
-      incoming.name === undefined ? user.name : String(incoming.name).trim()
-    const nextBio = incoming.bio === undefined ? user.bio : String(incoming.bio).trim()
-    const nextAvatarSeed =
-      incoming.avatarSeed === undefined
-        ? user.avatarSeed
-        : String(incoming.avatarSeed).trim()
-
-    if (!nextName) {
-      return badRequest(res, 'name cannot be empty')
-    }
-
-    if (!nextBio) {
-      return badRequest(res, 'bio cannot be empty')
-    }
-
-    if (!nextAvatarSeed) {
-      return badRequest(res, 'avatarSeed cannot be empty')
-    }
-
-    const previousName = user.name
-    user.name = nextName
-    user.bio = nextBio
-    user.avatarSeed = nextAvatarSeed
-    await user.save()
-
-    await Listing.updateMany(
-      { ownerId: user.id },
-      { $set: { owner: user.name } },
-    )
-
-    await Listing.updateMany(
-      { $or: [{ ownerId: null }, { ownerId: '' }], owner: previousName },
-      { $set: { owner: user.name } },
-    )
-
-    return res.json(publicUser(user))
-  } catch {
-    return res.status(500).json({ error: 'Failed to update profile' })
-  }
-})
-
-app.post('/api/applications', requireAuth, async (req, res) => {
+app.post('/api/applications', requireAuth, applicationValidation, async (req, res) => {
   try {
     const listingId = Number(req.body?.listingId)
     const userId = String(req.body?.userId ?? '')
-
-    if (!Number.isFinite(listingId) || !userId) {
-      return badRequest(res, 'listingId and userId are required')
-    }
 
     if (req.auth?.userId !== userId) {
       return res.status(403).json({ error: 'Forbidden for this user' })
@@ -575,15 +745,11 @@ app.post('/api/applications', requireAuth, async (req, res) => {
   }
 })
 
-app.post('/api/contact-requests', requireAuth, async (req, res) => {
+app.post('/api/contact-requests', requireAuth, contactRequestValidation, async (req, res) => {
   try {
     const targetType = String(req.body?.targetType ?? '')
     const targetId = String(req.body?.targetId ?? '')
     const userId = String(req.body?.userId ?? '')
-
-    if (!targetType || !targetId || !userId) {
-      return badRequest(res, 'targetType, targetId, and userId are required')
-    }
 
     if (req.auth?.userId !== userId) {
       return res.status(403).json({ error: 'Forbidden for this user' })
@@ -597,23 +763,28 @@ app.post('/api/contact-requests', requireAuth, async (req, res) => {
     if (targetType === 'listing') {
       const listing = await Listing.findOne({ id: Number(targetId) }).lean()
       if (!listing) return res.status(404).json({ error: 'Listing not found' })
-    } else if (targetType === 'tenant') {
+    } else {
       const tenant = await Tenant.findOne({ id: targetId }).lean()
       if (!tenant) return res.status(404).json({ error: 'Tenant not found' })
-    } else {
-      return badRequest(res, 'targetType must be "listing" or "tenant"')
     }
 
-    const contactRequest = {
+    const contactRequest = await ContactRequest.create({
       id: `contact-${Date.now()}`,
       targetType,
       targetId,
       userId,
-      createdAt: new Date().toISOString(),
-    }
+    })
 
-    contactRequests.push(contactRequest)
-    return res.status(201).json({ ok: true, contactRequest })
+    return res.status(201).json({
+      ok: true,
+      contactRequest: {
+        id: contactRequest.id,
+        targetType: contactRequest.targetType,
+        targetId: contactRequest.targetId,
+        userId: contactRequest.userId,
+        createdAt: contactRequest.createdAt,
+      },
+    })
   } catch {
     return res.status(500).json({ error: 'Failed to submit contact request' })
   }
@@ -630,16 +801,8 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal Server Error' })
 })
 
-ensureListingsSeeded().catch((err) => {
-  console.error('Failed to seed listings:', err)
-})
-
-ensureUsersSeeded().catch((err) => {
-  console.error('Failed to seed users:', err)
-})
-
-ensureTenantsSeeded().catch((err) => {
-  console.error('Failed to seed tenants:', err)
+ensureSeedData().catch((err) => {
+  console.error('Failed to seed database:', err)
 })
 
 module.exports = app
