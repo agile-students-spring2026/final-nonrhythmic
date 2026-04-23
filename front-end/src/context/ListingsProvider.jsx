@@ -10,7 +10,7 @@ export function ListingsProvider({ children }) {
   const [raw, setRaw] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [savedIds, setSavedIds] = useState([])
+  const [storedSavedIds, setStoredSavedIds] = useState([])
 
   useEffect(() => {
     let cancelled = false
@@ -32,27 +32,26 @@ export function ListingsProvider({ children }) {
   }, [])
 
   useEffect(() => {
-    if (!activeUserId) {
-      setSavedIds([])
-      return
-    }
+    if (!activeUserId) return
 
     let cancelled = false
 
     apiRequest(`/users/${activeUserId}/saved-listings`)
       .then((data) => {
         if (!cancelled) {
-          setSavedIds(Array.isArray(data) ? data.map((item) => item.id) : [])
+          setStoredSavedIds(Array.isArray(data) ? data.map((item) => item.id) : [])
         }
       })
       .catch(() => {
-        if (!cancelled) setSavedIds([])
+        if (!cancelled) setStoredSavedIds([])
       })
 
     return () => {
       cancelled = true
     }
   }, [activeUserId])
+
+  const savedIds = activeUserId ? storedSavedIds : []
 
   async function createListing(payload) {
     const created = await createListingRequest(payload)
@@ -69,7 +68,7 @@ export function ListingsProvider({ children }) {
       method: 'POST',
       body: { listingId },
     })
-    setSavedIds((prev) => (prev.includes(listingId) ? prev : [...prev, listingId]))
+    setStoredSavedIds((prev) => (prev.includes(listingId) ? prev : [...prev, listingId]))
   }
 
   async function unsaveListing(listingId) {
@@ -81,7 +80,7 @@ export function ListingsProvider({ children }) {
       method: 'DELETE',
     })
 
-    setSavedIds((prev) => prev.filter((id) => id !== listingId))
+    setStoredSavedIds((prev) => prev.filter((id) => id !== listingId))
   }
 
   async function toggleSaved(listingId) {
