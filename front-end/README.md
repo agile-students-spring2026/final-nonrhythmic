@@ -1,15 +1,15 @@
 # SubVet front-end
 
-React application (Vite) for the SubVet sublease discovery UI.
+Vite + React client for the SubVet housing app.
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org/) **18 or newer** (LTS recommended)
-- npm (included with Node)
+- [Node.js](https://nodejs.org/) 18 or newer
+- npm
 
 ## Install dependencies
 
-From this directory (`front-end/`):
+From `front-end/`:
 
 ```bash
 npm install
@@ -17,11 +17,13 @@ npm install
 
 ## Run in development
 
-Starts the Vite dev server with hot reload (default URL shown in the terminal, usually `http://localhost:5173`):
-
 ```bash
 npm run dev
 ```
+
+By default the app expects the API at `http://localhost:3000/api`.
+
+To point at a different server, set `VITE_API_BASE_URL` in a local `.env`.
 
 ## Production build
 
@@ -29,11 +31,7 @@ npm run dev
 npm run build
 ```
 
-Static output is written to `dist/`.
-
 ## Preview the production build locally
-
-After a build, serve the `dist/` folder:
 
 ```bash
 npm run preview
@@ -45,26 +43,12 @@ npm run preview
 npm run lint
 ```
 
-## Mock listing data
+## API integration notes
 
-Sublease listings and tenant directory rows are loaded at runtime from the public [DummyJSON](https://dummyjson.com/) API (no key). You need network access for listings, profile “My listings,” listing detail, tenant list and detail, and the profile photo ([Picsum](https://picsum.photos/) placeholder). Tenant cards and profile copy are normalized from DummyJSON `users` responses in the client; avatars use Picsum with a seeded URL per tenant.
-
-All main screens use the same bottom bar (`MainNav`): Home, Subleases, Listings feed, Listing detail, Tenants list, Tenant profile, Add listing, and Profile.
-
-## Sign in and registration
-
-- `/login`
-- `/register`
+- Listings, tenants, auth, profile updates, applications, saved listings, and contact requests all go through the local Express API.
+- Auth responses include a JWT token, and the client stores that token in local storage for subsequent API requests.
+- Listing and tenant images still use seeded placeholder image URLs in the UI.
 
 ## Secrets and configuration
 
-Do **not** commit API keys, database connection strings, or other secrets. If the project later uses environment variables, keep real values in a local `.env` file that is listed in `.gitignore` and never checked in. Submit any required `.env` contents to course staff only through the channel your team uses.
-
-## Scripts reference
-
-| Command | Description |
-|--------|---------------|
-| `npm run dev` | Development server |
-| `npm run build` | Production build to `dist/` |
-| `npm run preview` | Preview `dist/` locally |
-| `npm run lint` | Run ESLint |
+Do not commit real environment variables, database URIs, or JWT secrets. Keep local values in `.env` files that are ignored by git.

@@ -1,90 +1,79 @@
-# Project Repository
-
 # SubVet
 
-SubVet is a platform designed to help students find short-term subleases quickly and easily. The system allows users to browse available sublease listings, filter results based on preferences, and view detailed information about each listing before contacting the owner.
+SubVet is a student-focused short-term housing platform for browsing sublease listings, discovering potential roommates, and managing common renter actions in one place.
 
-Our goal is to simplify the process of finding temporary housing for students and interns by providing a centralized and easy-to-use platform.
+The project now runs as a split-stack app:
 
----
+- `front-end/`: Vite + React client
+- `back-end/`: Express API backed by MongoDB Atlas via Mongoose
 
-## Product Vision Statement
+## Current Product State
 
-SubVet aims to provide students with a reliable and user-friendly platform for discovering short-term housing opportunities. The product focuses on making the sublease search process simple by allowing users to browse listings, filter results, and view detailed information about each property. 
+The app currently supports:
 
-The initial Minimum Viable Product (MVP) focuses on the core experience: discovering available subleases and accessing essential information needed to evaluate housing options.
+- Browse listings and view listing details
+- Browse tenant profiles
+- Register and log in with JWT-backed auth
+- Create listings and tenant posts through the API
+- Save and unsave listings
+- Submit applications and contact requests
+- Edit the signed-in user profile
 
----
+## Local Development
 
-## Current Features (Prototype)
+### Back-end
 
-The current prototype includes:
-
-- Sublease listing browsing page
-- Search functionality
-- Filter options for refining results
-- Listing detail page with more information
-- Save listing functionality (concept)
-- Add listing functionality (connected to backend)
-- Profile page displaying user-specific listings
-- Front-end and back-end integration
-
----
-
-## Run the project locally
-
-This repository includes both a **front-end** and a **back-end**.
-
-### Start the Back-End
+From `back-end/`:
 
 ```bash
-cd back-end
 npm install
-npm start
+npm run dev
+```
+
+Required environment variables in a local `.env` file:
+
+- `MONGO_URI`
+- `JWT_SECRET`
+
+Optional environment variables:
+
+- `PORT`
+- `HOST`
+
+### Front-end
+
+From `front-end/`:
+
+```bash
+npm install
+npm run dev
+```
+
+Optional front-end environment variable:
+
+- `VITE_API_BASE_URL`
+  Default: `http://localhost:3000/api`
+
+## Verification
+
+- Back-end tests: `cd back-end && npm test`
+- Front-end lint: `cd front-end && npm run lint`
+- Front-end build: `cd front-end && npm run build`
 
 ## Team Members
 
-- Jack Chen — https://github.com/hc4893-lab  
-- Kaiyuan Wu - https://github.com/qiexian-mf 
+- Jack Chen — https://github.com/hc4893-lab
+- Kaiyuan Wu - https://github.com/qiexian-mf
 - Anthony Lu - https://www.github.com/anthonylu23
 - Jungwoo Park - https://github.com/ParkJ82
-- Khushboo Agrawal- https://github.com/KhushbooAgrawal190803
+- Khushboo Agrawal - https://github.com/KhushbooAgrawal190803
 
----
+## Course References
 
-## Project Background
-
-Finding short-term housing can be difficult for students, especially for internships, summer programs, or temporary stays. Existing platforms are often not designed specifically for student needs. 
-
-SubVet was created to address this problem by providing a focused platform where students can easily discover and evaluate available sublease opportunities.
-
----
-
-## Contributing
-
-Please see the **CONTRIBUTING.md** file for information about the team's workflow, contribution guidelines, and development process.
-
----
-
-## Project Status
-
-This project is currently in **Sprint 2 development**. The team has implemented a working back-end using Express.js and integrated it with the front-end. Users can now create listings and view data dynamically from the server.
-
-
-
-
-This repository will be used for team projects.
-
-Several sets of instructions are included in this repository. They should each be treated as separate assignments with their own due dates and sets of requirements.
-
-1. See the [App Map & Wireframes](instructions-0a-app-map-wireframes.md) and [Prototyping](./instructions-0b-prototyping.md) instructions for the requirements of the initial user experience design of the app.
-
-1. See the [Sprint Planning instructions](instructions-0d-sprint-planning.md) for the requirements of Sprint Planning for each Sprint.
-
-1. See the [Front-End Development instructions](./instructions-1-front-end.md) for the requirements of the initial Front-End Development.
-
-1. See the [Back-End Development instructions](./instructions-2-back-end.md) for the requirements of the initial Back-End Development.
-
-1. See the [Database Integration instructions](./instructions-3-database.md) for the requirements of integrating a database into the back-end.
-
-1. See the [Deployment instructions](./instructions-4-deployment.md) for the requirements of deploying an app.
+- [App Map & Wireframes](./instructions-0a-app-map-wireframes.md)
+- [Prototyping](./instructions-0b-prototyping.md)
+- [Sprint Planning](./instructions-0d-sprint-planning.md)
+- [Front-End Development](./instructions-1-front-end.md)
+- [Back-End Development](./instructions-2-back-end.md)
+- [Database Integration](./instructions-3-database.md)
+- [Deployment](./instructions-4-deployment.md)
