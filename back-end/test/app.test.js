@@ -237,6 +237,19 @@ describe('Back-end API', () => {
     createdApplicationId = res.body.application.id
   })
 
+  it('rejects a duplicate application to the same listing', async () => {
+    const res = await request(app)
+      .post('/api/applications')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({
+        listingId: createdListingId,
+        userId: createdUserId,
+      })
+
+    expect(res.status).to.equal(409)
+    expect(res.body.error).to.equal('You have already applied to this listing')
+  })
+
   it('creates and persists a contact request to a listing', async () => {
     const res = await request(app)
       .post('/api/contact-requests')

@@ -20,8 +20,18 @@ if (!process.env.JWT_SECRET) {
 // connect to MongoDB first
 mongoose
   .connect(MONGO_URI)
-  .then(() => {
+  .then(async () => {
     console.log('✅ Connected to MongoDB')
+
+    const Application = require('./models/Application')
+    try {
+      await Application.syncIndexes()
+    } catch (err) {
+      console.warn(
+        '⚠️ Application index sync failed (remove duplicate listingId+userId rows, then restart):',
+        err.message,
+      )
+    }
 
     app.listen(PORT, HOST, () => {
       console.log(`🚀 Server running on http://${HOST}:${PORT}`)
