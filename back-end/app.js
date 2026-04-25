@@ -725,6 +725,11 @@ app.post('/api/applications', requireAuth, applicationValidation, async (req, re
       return res.status(404).json({ error: 'User not found' })
     }
 
+    const alreadyApplied = await Application.findOne({ listingId, userId }).lean()
+    if (alreadyApplied) {
+      return res.status(409).json({ error: 'You have already applied to this listing' })
+    }
+
     const application = await Application.create({
       id: `app-${Date.now()}`,
       listingId,
@@ -740,7 +745,10 @@ app.post('/api/applications', requireAuth, applicationValidation, async (req, re
         createdAt: application.createdAt,
       },
     })
-  } catch {
+  } catch (err) {
+    if (err && err.code === 11000) {
+      return res.status(409).json({ error: 'You have already applied to this listing' })
+    }
     return res.status(500).json({ error: 'Failed to submit application' })
   }
 })
