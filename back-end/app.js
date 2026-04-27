@@ -8,6 +8,7 @@ const seedListings = require('./listingsData')
 const seedTenants = require('./tenantsData')
 const Application = require('./models/Application')
 const ContactRequest = require('./models/ContactRequest')
+const Counter = require('./models/Counter')
 const Listing = require('./models/Listing')
 const SavedListing = require('./models/SavedListing')
 const Tenant = require('./models/Tenant')
@@ -260,17 +261,40 @@ function nextUserId() {
   return `user-${Date.now()}`
 }
 
+const TENANT_COUNTER_ID = 'tenant'
+
+async function maxTenantIdFromDb() {
+  const [row] = await Tenant.aggregate([
+    {
+      $addFields: {
+        n: {
+          $convert: { input: '$id', to: 'int', onError: null, onNull: null },
+        },
+      },
+    },
+    { $match: { n: { $ne: null } } },
+    { $group: { _id: null, max: { $max: '$n' } } },
+  ])
+  return row?.max ?? 0
+}
+
+async function syncTenantIdCounter() {
+  const max = await maxTenantIdFromDb()
+  await Counter.findOneAndUpdate(
+    { _id: TENANT_COUNTER_ID },
+    { $set: { seq: max } },
+    { upsert: true },
+  )
+}
+
+/** Next tenant display id; counter must be synced (e.g. after seed) so it stays past existing rows. */
 async function nextTenantId() {
-  const last = await Tenant.findOne().sort({ createdAt: -1 }).lean()
-  if (!last) return '1'
-
-  const allIds = await Tenant.find({}, { id: 1 }).lean()
-  const max = allIds.reduce((acc, item) => {
-    const n = Number(item.id)
-    return Number.isFinite(n) && n > acc ? n : acc
-  }, 0)
-
-  return String(max + 1)
+  const updated = await Counter.findOneAndUpdate(
+    { _id: TENANT_COUNTER_ID },
+    { $inc: { seq: 1 } },
+    { new: true, upsert: true },
+  )
+  return String(updated.seq)
 }
 
 async function normalizeListingOwner({ ownerId, owner }) {
@@ -371,7 +395,10 @@ async function ensureSeedData() {
   await ensureListingsSeeded()
   await ensureTenantsSeeded()
   await ensureSavedListingsSeeded()
+  await syncTenantIdCounter()
 }
+
+app.ensureSeedData = ensureSeedData
 
 app.get('/health', (req, res) => res.json({ ok: true }))
 app.get('/api/health', (req, res) => res.json({ ok: true }))
@@ -807,10 +834,6 @@ app.use((req, res) => {
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal Server Error' })
-})
-
-ensureSeedData().catch((err) => {
-  console.error('Failed to seed database:', err)
 })
 
 module.exports = app

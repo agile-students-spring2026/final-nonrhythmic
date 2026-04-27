@@ -23,6 +23,7 @@ describe('Back-end API', () => {
     if (mongoose.connection.readyState === 0) {
       await mongoose.connect(process.env.MONGO_URI)
     }
+    await app.ensureSeedData()
   })
 
   after(async () => {

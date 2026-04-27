@@ -33,6 +33,13 @@ mongoose
       )
     }
 
+    try {
+      await app.ensureSeedData()
+    } catch (err) {
+      console.error('Failed to seed database:', err)
+      process.exit(1)
+    }
+
     app.listen(PORT, HOST, () => {
       console.log(`🚀 Server running on http://${HOST}:${PORT}`)
     })
