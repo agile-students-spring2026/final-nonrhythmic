@@ -478,6 +478,27 @@ app.post(
   },
 )
 
+app.get(
+  '/api/users/:id/applications',
+  requireAuth,
+  userIdParamValidation,
+  requireAuthForUserParam,
+  async (req, res) => {
+    try {
+      const userId = String(req.params.id)
+
+      const applications = await Application.find({ userId }).sort({ createdAt: -1 }).lean()
+      const listingIds = applications.map((item) => item.listingId)
+
+      const appliedListings = await Listing.find({ id: { $in: listingIds } }).sort({ id: 1 }).lean()
+
+      return res.json(appliedListings)
+    } catch {
+      return res.status(500).json({ error: 'Failed to load applied listings' })
+    }
+  },
+)
+
 app.delete(
   '/api/users/:id/saved-listings/:listingId',
   requireAuth,
@@ -729,6 +750,33 @@ app.patch(
       return res.json(publicUser(user))
     } catch {
       return res.status(500).json({ error: 'Failed to update profile' })
+    }
+  },
+)
+
+app.get(
+  '/api/users/:id/applications',
+  requireAuth,
+  userIdParamValidation,
+  requireAuthForUserParam,
+  async (req, res) => {
+    try {
+      const userId = String(req.params.id)
+
+      const applications = await Application.find({ userId }).sort({ createdAt: -1 }).lean()
+      const listingIds = applications.map((item) => item.listingId)
+
+      const listings = await Listing.find({ id: { $in: listingIds } }).sort({ id: 1 }).lean()
+
+      const appliedListings = listings.map((listing) => ({
+        ...listing,
+        applicationStatus: 'Submitted',
+        applicationNote: 'Waiting for owner response',
+      }))
+
+      return res.json(appliedListings)
+    } catch {
+      return res.status(500).json({ error: 'Failed to load applied listings' })
     }
   },
 )

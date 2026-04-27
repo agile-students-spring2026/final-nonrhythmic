@@ -6,6 +6,7 @@ import MainNav from './MainNav'
 import { useAuth } from './hooks/useAuth'
 import { useListings } from './hooks/useListings'
 import './ProfilePage.css'
+import { getUserApplications } from './api/applications'
 
 function ProfilePage() {
   const navigate = useNavigate()
@@ -20,6 +21,9 @@ function ProfilePage() {
   const [draftBio, setDraftBio] = useState('')
   const [saving, setSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState('')
+  const [appliedListings, setAppliedListings] = useState([])
+  const [appliedLoading, setAppliedLoading] = useState(false)
+  const [appliedError, setAppliedError] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -45,6 +49,34 @@ function ProfilePage() {
       cancelled = true
     }
   }, [activeUserId])
+
+  useEffect(() => {
+    if (!user || !activeUserId) {
+      setAppliedListings([])
+      return
+    }
+
+    let cancelled = false
+    setAppliedLoading(true)
+    setAppliedError('')
+
+    getUserApplications(activeUserId)
+      .then((listings) => {
+        if (cancelled) return
+        setAppliedListings(listings ?? [])
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setAppliedError(err.message || 'Could not load applied listings right now.')
+      })
+      .finally(() => {
+        if (!cancelled) setAppliedLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [user, activeUserId])
 
   const profileName = profile?.name ?? user?.name ?? 'Kaiyuan Wu'
   const profileEmail = profile?.email ?? user?.email ?? 'demo@subvet.app'
@@ -224,13 +256,13 @@ function ProfilePage() {
 
           <section className="profile-section" aria-labelledby="profile-listings-heading">
             <h2 id="profile-listings-heading" className="profile-listings-title">
-              My listings
+              Created listings
             </h2>
 
             {loading ? (
               <p className="profile-listings-hint">Loading listings…</p>
             ) : myListings.length === 0 ? (
-              <p className="profile-listings-hint">No listings yet.</p>
+              <p className="profile-listings-hint">No created listings yet.</p>
             ) : (
               <div className="profile-listings-stack">
                 {myListings.map((listing) => (
@@ -246,6 +278,42 @@ function ProfilePage() {
                     details={listing.details}
                     showFavorite={false}
                   />
+                ))}
+              </div>
+            )}
+          </section>
+          <section className="profile-section" aria-labelledby="profile-applied-listings-heading">
+            <h2 id="profile-applied-listings-heading" className="profile-listings-title">
+              Applied listings
+            </h2>
+
+            {appliedLoading ? (
+              <p className="profile-listings-hint">Loading applied listings…</p>
+            ) : appliedError ? (
+              <p className="profile-listings-hint">{appliedError}</p>
+            ) : appliedListings.length === 0 ? (
+              <p className="profile-listings-hint">No applied listings yet.</p>
+            ) : (
+              <div className="profile-listings-stack">
+                {appliedListings.map((listing) => (
+                  <div className="profile-applied-card" key={listing.id}>
+                    <div className="profile-application-status">
+                      <span className="profile-status-badge">Submitted</span>
+                      <span className="profile-status-text">Waiting for owner response</span>
+                    </div>
+
+                    <ListingCard
+                      variant="feed"
+                      to={`/listing/${listing.id}`}
+                      name={listing.name}
+                      location={listing.location}
+                      price={listing.price}
+                      imageSeed={`subvet-${listing.id}`}
+                      rating={listing.rating}
+                      details={listing.details}
+                      showFavorite={false}
+                    />
+                  </div>
                 ))}
               </div>
             )}
