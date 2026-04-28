@@ -117,6 +117,9 @@ typings/
 # dotenv environment variables file
 .env
 
+# Uploaded files (local disk storage)
+back-end/uploads/
+
 # next.js build output
 .next
 

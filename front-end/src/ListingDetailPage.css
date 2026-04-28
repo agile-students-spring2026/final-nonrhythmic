@@ -485,3 +485,32 @@
 .listing-detail-zoom-btn--right {
   right: 0.75rem;
 }
+
+.listing-detail-proofs {
+  margin-top: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.02);
+  text-align: left;
+}
+
+.listing-detail-proofs-label {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #666;
+}
+
+.listing-detail-proofs-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.875rem;
+}
+
+.listing-detail-proofs-list a {
+  color: inherit;
+  font-weight: 600;
+}

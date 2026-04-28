@@ -1,15 +1,25 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useMemo, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
-import MainNav from './MainNav'
+import { getSafeRedirect } from './utils/authRedirect'
 import './AuthPage.css'
 
 function LoginPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { login } = useAuth()
   const [form, setForm] = useState({ email: '', password: '' })
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+
+  const redirectParam = searchParams.get('redirect')
+  const afterLoginPath = useMemo(
+    () => getSafeRedirect(redirectParam, '/listings'),
+    [redirectParam],
+  )
+  const registerHref = useMemo(() => {
+    return redirectParam ? `/register?redirect=${encodeURIComponent(redirectParam)}` : '/register'
+  }, [redirectParam])
 
   function update(key, value) {
     setForm((current) => ({ ...current, [key]: value }))
@@ -22,7 +32,7 @@ function LoginPage() {
 
     try {
       await login(form)
-      navigate('/profile')
+      navigate(afterLoginPath, { replace: true })
     } catch (err) {
       setError(err.message || 'Could not sign in right now.')
     } finally {
@@ -83,12 +93,10 @@ function LoginPage() {
 
         <p className="auth-footer">
           No account?{' '}
-          <Link to="/register" className="auth-link">
+          <Link to={registerHref} className="auth-link">
             Create one
           </Link>
         </p>
-
-        <MainNav />
       </div>
     </div>
   )

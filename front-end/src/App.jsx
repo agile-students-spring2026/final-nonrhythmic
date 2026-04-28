@@ -3,6 +3,7 @@ import './App.css'
 import { AuthProvider } from './context/AuthProvider'
 import { ListingsProvider } from './context/ListingsProvider'
 import { TenantsProvider } from './context/TenantsProvider'
+import RequireAuth from './RequireAuth'
 import HomePage from './HomePage'
 import ListingsPage from './ListingsPage'
 import ListingDetailPage from './ListingDetailPage'
@@ -21,17 +22,19 @@ function App() {
         <TenantsProvider>
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/listings" element={<ListingsPage />} />
-              <Route path="/listing/:id" element={<ListingDetailPage />} />
-              <Route path="/listing" element={<Navigate to="/listings" replace />} />
-              <Route path="/tenants" element={<TenantsPage />} />
-              <Route path="/tenant/:tenantId" element={<TenantProfilePage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/add-listing" element={<AddListingPage />} />
-              <Route path="/saved" element={<SavedPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route element={<RequireAuth />}>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/listings" element={<ListingsPage />} />
+                <Route path="/listing/:id" element={<ListingDetailPage />} />
+                <Route path="/listing" element={<Navigate to="/listings" replace />} />
+                <Route path="/tenants" element={<TenantsPage />} />
+                <Route path="/tenant/:tenantId" element={<TenantProfilePage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/add-listing" element={<AddListingPage />} />
+                <Route path="/saved" element={<SavedPage />} />
+              </Route>
             </Routes>
           </BrowserRouter>
         </TenantsProvider>

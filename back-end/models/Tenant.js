@@ -13,6 +13,8 @@ const tenantSchema = new mongoose.Schema(
     questions: { type: String, default: '' },
     company: { type: String, default: 'Summer internship' },
     avatarSeed: { type: String, default: '' },
+    posterUserId: { type: String, default: null, index: true },
+    proofUrls: { type: [String], default: [] },
   },
   { timestamps: true },
 )

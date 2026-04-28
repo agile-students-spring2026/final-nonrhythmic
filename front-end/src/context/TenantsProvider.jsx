@@ -1,14 +1,29 @@
 import { useEffect, useState } from 'react'
 import { createTenant as createTenantRequest, getTenants } from '../api/tenants'
+import { useAuth } from '../hooks/useAuth'
 import { TenantsContext } from './tenantsContext'
 
 export function TenantsProvider({ children }) {
+  const { user } = useAuth()
   const [raw, setRaw] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   useEffect(() => {
     let cancelled = false
+
+    if (!user) {
+      setRaw([])
+      setError(null)
+      setLoading(false)
+      return () => {
+        cancelled = true
+      }
+    }
+
+    setLoading(true)
+    setError(null)
+
     getTenants()
       .then((data) => {
         if (!cancelled) setRaw(Array.isArray(data) ? data : [])
@@ -22,7 +37,7 @@ export function TenantsProvider({ children }) {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [user])
 
   async function createTenant(payload) {
     const created = await createTenantRequest(payload)

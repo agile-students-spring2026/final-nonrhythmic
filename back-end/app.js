@@ -1,8 +1,10 @@
 const path = require('node:path')
+const fs = require('node:fs')
 const express = require('express')
 const cors = require('cors')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+const multer = require('multer')
 const { body, param, validationResult } = require('express-validator')
 const seedListings = require('./listingsData')
 const seedTenants = require('./tenantsData')
@@ -10,14 +12,30 @@ const Application = require('./models/Application')
 const ContactRequest = require('./models/ContactRequest')
 const Counter = require('./models/Counter')
 const Listing = require('./models/Listing')
+const Notification = require('./models/Notification')
 const SavedListing = require('./models/SavedListing')
 const Tenant = require('./models/Tenant')
 const User = require('./models/User')
 
 const app = express()
 
+const UPLOAD_DIR = path.join(__dirname, 'uploads')
+fs.mkdirSync(UPLOAD_DIR, { recursive: true })
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname || '') || '.bin'
+      cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`)
+    },
+  }),
+  limits: { fileSize: 15 * 1024 * 1024 },
+})
+
 app.use(cors())
 app.use(express.json())
+app.use('/uploads', express.static(UPLOAD_DIR))
 
 const PASSWORD_SALT_ROUNDS = 10
 const JWT_SECRET = process.env.JWT_SECRET
@@ -110,6 +128,10 @@ const listingIdParamValidation = validate([
     .toInt(),
 ])
 
+const notificationIdParamValidation = validate([
+  requiredTextParam('notificationId', 'notificationId is required'),
+])
+
 const createListingValidation = validate([
   requiredTextBody('name'),
   requiredTextBody('location'),
@@ -137,6 +159,8 @@ const createListingValidation = validate([
     .isFloat({ min: 0 })
     .withMessage('rentUsd must be a non-negative number')
     .toFloat(),
+  body('imageUrls').optional({ values: 'undefined' }).isArray().withMessage('imageUrls must be an array'),
+  body('proofUrls').optional({ values: 'undefined' }).isArray().withMessage('proofUrls must be an array'),
 ])
 
 const createTenantValidation = validate([
@@ -155,6 +179,7 @@ const createTenantValidation = validate([
   optionalTextBody('ideal'),
   optionalTextBody('questions'),
   optionalTextBody('company'),
+  body('proofUrls').optional({ values: 'undefined' }).isArray().withMessage('proofUrls must be an array'),
 ])
 
 const loginValidation = validate([
@@ -247,6 +272,15 @@ function requireAuthForUserParam(req, res, next) {
   return next()
 }
 
+function nextNotificationId() {
+  return `note-${Date.now()}-${Math.round(Math.random() * 1e9)}`
+}
+
+function sanitizeUploadUrls(value) {
+  if (!Array.isArray(value)) return []
+  return value.filter((u) => typeof u === 'string' && /^\/uploads\/[^/]+$/.test(u))
+}
+
 function normalizeEmail(email) {
   return String(email ?? '')
     .trim()
@@ -295,23 +329,6 @@ async function nextTenantId() {
     { new: true, upsert: true },
   )
   return String(updated.seq)
-}
-
-async function normalizeListingOwner({ ownerId, owner }) {
-  if (!ownerId) {
-    return {
-      ownerId: null,
-      owner: owner ? String(owner).trim() : 'Kaiyuan Wu',
-    }
-  }
-
-  const user = await findUserById(ownerId)
-  if (!user) return null
-
-  return {
-    ownerId: user.id,
-    owner: owner ? String(owner).trim() : user.name,
-  }
 }
 
 async function nextListingId() {
@@ -403,7 +420,7 @@ app.ensureSeedData = ensureSeedData
 app.get('/health', (req, res) => res.json({ ok: true }))
 app.get('/api/health', (req, res) => res.json({ ok: true }))
 
-app.get('/api/listings', async (req, res) => {
+app.get('/api/listings', requireAuth, async (req, res) => {
   try {
     const listings = await Listing.find().sort({ id: 1 }).lean()
     res.json(listings)
@@ -412,7 +429,7 @@ app.get('/api/listings', async (req, res) => {
   }
 })
 
-app.get('/api/listings/:id', async (req, res) => {
+app.get('/api/listings/:id', requireAuth, async (req, res) => {
   try {
     const id = Number(req.params.id)
     const listing = await Listing.findOne({ id }).lean()
@@ -499,6 +516,47 @@ app.get(
   },
 )
 
+app.get(
+  '/api/users/:id/notifications',
+  requireAuth,
+  userIdParamValidation,
+  requireAuthForUserParam,
+  async (req, res) => {
+    try {
+      const userId = String(req.params.id)
+      const items = await Notification.find({ recipientUserId: userId }).sort({ createdAt: -1 }).lean()
+      return res.json(items)
+    } catch {
+      return res.status(500).json({ error: 'Failed to load notifications' })
+    }
+  },
+)
+
+app.patch(
+  '/api/users/:id/notifications/:notificationId/read',
+  requireAuth,
+  userIdParamValidation,
+  notificationIdParamValidation,
+  requireAuthForUserParam,
+  async (req, res) => {
+    try {
+      const userId = String(req.params.id)
+      const notificationId = String(req.params.notificationId)
+      const doc = await Notification.findOneAndUpdate(
+        { id: notificationId, recipientUserId: userId },
+        { $set: { read: true } },
+        { new: true },
+      ).lean()
+      if (!doc) {
+        return res.status(404).json({ error: 'Notification not found' })
+      }
+      return res.json({ ok: true, notification: doc })
+    } catch {
+      return res.status(500).json({ error: 'Failed to update notification' })
+    }
+  },
+)
+
 app.delete(
   '/api/users/:id/saved-listings/:listingId',
   requireAuth,
@@ -522,8 +580,27 @@ app.delete(
   },
 )
 
-app.post('/api/listings', createListingValidation, async (req, res) => {
+app.post('/api/upload', requireAuth, upload.array('files', 15), (req, res) => {
   try {
+    const files = req.files
+    if (!files || files.length === 0) {
+      return badRequest(res, 'No files uploaded')
+    }
+
+    const urls = files.map((f) => `/uploads/${f.filename}`)
+    return res.status(201).json({ ok: true, urls })
+  } catch {
+    return res.status(500).json({ error: 'Failed to upload files' })
+  }
+})
+
+app.post('/api/listings', requireAuth, createListingValidation, async (req, res) => {
+  try {
+    const ownerUser = await findUserById(req.auth.userId)
+    if (!ownerUser) {
+      return res.status(401).json({ error: 'User not found' })
+    }
+
     const {
       name,
       location,
@@ -532,22 +609,16 @@ app.post('/api/listings', createListingValidation, async (req, res) => {
       reviewCount,
       details,
       description,
-      owner,
-      ownerId,
       bhk,
       area,
       rentUsd,
       mapQuery,
+      imageUrls: rawImageUrls,
+      proofUrls: rawProofUrls,
     } = req.body ?? {}
 
-    const normalizedOwner = await normalizeListingOwner({
-      ownerId: ownerId ? String(ownerId) : null,
-      owner,
-    })
-
-    if (ownerId && !normalizedOwner) {
-      return res.status(404).json({ error: 'User not found' })
-    }
+    const imageUrls = sanitizeUploadUrls(rawImageUrls)
+    const proofUrls = sanitizeUploadUrls(rawProofUrls)
 
     const normalizedRent = Number(rentUsd)
     const listing = await Listing.create({
@@ -562,12 +633,14 @@ app.post('/api/listings', createListingValidation, async (req, res) => {
       reviewCount: Number.isFinite(Number(reviewCount)) ? Math.max(0, Number(reviewCount)) : 0,
       details: details ? String(details).trim() : 'Private room · shared unit',
       description: description ? String(description).trim() : 'No description provided yet.',
-      owner: normalizedOwner?.owner ?? 'Kaiyuan Wu',
-      ownerId: normalizedOwner?.ownerId ?? null,
+      owner: ownerUser.name,
+      ownerId: ownerUser.id,
       bhk: bhk ? String(bhk) : 'room',
       area: area ? String(area).trim() : String(location).trim(),
       rentUsd: Number.isFinite(normalizedRent) ? normalizedRent : null,
       mapQuery: mapQuery ? String(mapQuery).trim() : `${String(location).trim()}, New York, NY`,
+      imageUrls,
+      proofUrls,
     })
 
     return res.status(201).json(listing)
@@ -576,7 +649,7 @@ app.post('/api/listings', createListingValidation, async (req, res) => {
   }
 })
 
-app.get('/api/tenants', async (req, res) => {
+app.get('/api/tenants', requireAuth, async (req, res) => {
   try {
     const tenants = await Tenant.find().sort({ id: 1 }).lean()
     res.json(tenants)
@@ -585,7 +658,7 @@ app.get('/api/tenants', async (req, res) => {
   }
 })
 
-app.get('/api/tenants/:id', async (req, res) => {
+app.get('/api/tenants/:id', requireAuth, async (req, res) => {
   try {
     const tenant = await Tenant.findOne({ id: String(req.params.id) }).lean()
 
@@ -599,7 +672,7 @@ app.get('/api/tenants/:id', async (req, res) => {
   }
 })
 
-app.post('/api/tenants', createTenantValidation, async (req, res) => {
+app.post('/api/tenants', requireAuth, createTenantValidation, async (req, res) => {
   try {
     const {
       displayName,
@@ -611,7 +684,10 @@ app.post('/api/tenants', createTenantValidation, async (req, res) => {
       ideal,
       questions,
       company,
+      proofUrls: rawProofUrls,
     } = req.body ?? {}
+
+    const proofUrls = sanitizeUploadUrls(rawProofUrls)
 
     const id = await nextTenantId()
     const tenant = await Tenant.create({
@@ -630,6 +706,8 @@ app.post('/api/tenants', createTenantValidation, async (req, res) => {
       questions: questions ? String(questions).trim() : 'No questions yet.',
       company: company ? String(company).trim() : 'Summer internship',
       avatarSeed: `subvet-tenant-${id}`,
+      posterUserId: req.auth.userId,
+      proofUrls,
     })
 
     return res.status(201).json(tenant)
@@ -652,17 +730,7 @@ app.post('/api/auth/login', loginValidation, async (req, res) => {
       return res.json({ ok: true, user: publicUser(existing), token: signAuthToken(existing) })
     }
 
-    const passwordHash = await bcrypt.hash(password, PASSWORD_SALT_ROUNDS)
-    const user = await User.create(
-      buildUserDoc({
-        id: nextUserId(),
-        name: email.split('@')[0] || 'User',
-        email,
-        passwordHash,
-      }),
-    )
-
-    return res.json({ ok: true, user: publicUser(user), token: signAuthToken(user) })
+    return res.status(401).json({ error: 'No account for this email. Please register first.' })
   } catch {
     return res.status(500).json({ error: 'Failed to log in' })
   }
@@ -698,7 +766,7 @@ app.post('/api/auth/register', registerValidation, async (req, res) => {
   }
 })
 
-app.get('/api/users/:id', userIdParamValidation, async (req, res) => {
+app.get('/api/users/:id', requireAuth, userIdParamValidation, async (req, res) => {
   try {
     const user = await findUserById(req.params.id)
 
@@ -754,33 +822,6 @@ app.patch(
   },
 )
 
-app.get(
-  '/api/users/:id/applications',
-  requireAuth,
-  userIdParamValidation,
-  requireAuthForUserParam,
-  async (req, res) => {
-    try {
-      const userId = String(req.params.id)
-
-      const applications = await Application.find({ userId }).sort({ createdAt: -1 }).lean()
-      const listingIds = applications.map((item) => item.listingId)
-
-      const listings = await Listing.find({ id: { $in: listingIds } }).sort({ id: 1 }).lean()
-
-      const appliedListings = listings.map((listing) => ({
-        ...listing,
-        applicationStatus: 'Submitted',
-        applicationNote: 'Waiting for owner response',
-      }))
-
-      return res.json(appliedListings)
-    } catch {
-      return res.status(500).json({ error: 'Failed to load applied listings' })
-    }
-  },
-)
-
 app.post('/api/applications', requireAuth, applicationValidation, async (req, res) => {
   try {
     const listingId = Number(req.body?.listingId)
@@ -795,8 +836,8 @@ app.post('/api/applications', requireAuth, applicationValidation, async (req, re
       return res.status(404).json({ error: 'Listing not found' })
     }
 
-    const user = await findUserById(userId)
-    if (!user) {
+    const actor = await User.findOne({ id: userId }).lean()
+    if (!actor) {
       return res.status(404).json({ error: 'User not found' })
     }
 
@@ -811,8 +852,26 @@ app.post('/api/applications', requireAuth, applicationValidation, async (req, re
       userId,
     })
 
+    let notifiedOwner = false
+    if (listing.ownerId && listing.ownerId !== userId) {
+      await Notification.create({
+        id: nextNotificationId(),
+        recipientUserId: listing.ownerId,
+        kind: 'listing_application',
+        listingId: listing.id,
+        listingName: listing.name || '',
+        tenantId: null,
+        tenantName: '',
+        fromUserId: actor.id,
+        fromUserName: actor.name,
+        fromEmail: actor.email,
+      })
+      notifiedOwner = true
+    }
+
     return res.status(201).json({
       ok: true,
+      notifiedOwner,
       application: {
         id: application.id,
         listingId: application.listingId,
@@ -838,17 +897,51 @@ app.post('/api/contact-requests', requireAuth, contactRequestValidation, async (
       return res.status(403).json({ error: 'Forbidden for this user' })
     }
 
-    const user = await findUserById(userId)
-    if (!user) {
+    const actor = await User.findOne({ id: userId }).lean()
+    if (!actor) {
       return res.status(404).json({ error: 'User not found' })
     }
+
+    let notifiedOwner = false
 
     if (targetType === 'listing') {
       const listing = await Listing.findOne({ id: Number(targetId) }).lean()
       if (!listing) return res.status(404).json({ error: 'Listing not found' })
+
+      if (listing.ownerId && listing.ownerId !== userId) {
+        await Notification.create({
+          id: nextNotificationId(),
+          recipientUserId: listing.ownerId,
+          kind: 'listing_contact',
+          listingId: listing.id,
+          listingName: listing.name || '',
+          tenantId: null,
+          tenantName: '',
+          fromUserId: actor.id,
+          fromUserName: actor.name,
+          fromEmail: actor.email,
+        })
+        notifiedOwner = true
+      }
     } else {
       const tenant = await Tenant.findOne({ id: targetId }).lean()
       if (!tenant) return res.status(404).json({ error: 'Tenant not found' })
+
+      if (tenant.posterUserId && tenant.posterUserId !== userId) {
+        await Notification.create({
+          id: nextNotificationId(),
+          recipientUserId: tenant.posterUserId,
+          kind: 'tenant_contact',
+          listingId: null,
+          listingName: '',
+          tenantId: tenant.id,
+          tenantName: tenant.displayName || '',
+          fromUserId: actor.id,
+          fromUserName: actor.name,
+          fromEmail: actor.email,
+        })
+        notifiedOwner = true
+      }
     }
 
     const contactRequest = await ContactRequest.create({
@@ -860,6 +953,7 @@ app.post('/api/contact-requests', requireAuth, contactRequestValidation, async (
 
     return res.status(201).json({
       ok: true,
+      notifiedOwner,
       contactRequest: {
         id: contactRequest.id,
         targetType: contactRequest.targetType,

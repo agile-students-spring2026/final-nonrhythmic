@@ -174,9 +174,3 @@
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-
-.auth-page .bottom-nav {
-  margin-top: 1.25rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--au-line-soft);
-}

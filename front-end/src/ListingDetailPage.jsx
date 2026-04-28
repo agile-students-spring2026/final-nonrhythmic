@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
+import { getApiOriginForStaticFiles } from './api/client'
 import { createContactRequest, submitApplication } from './api/actions'
 import { fetchProductById } from './api/fetchProductById'
 import MainNav from './MainNav'
@@ -12,7 +13,6 @@ function ListingDetailPage() {
 }
 
 function ListingDetailInner({ id }) {
-  const navigate = useNavigate()
   const { user } = useAuth()
   const [listing, setListing] = useState(null)
   const [loadError, setLoadError] = useState(null)
@@ -79,6 +79,10 @@ function ListingDetailInner({ id }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [mapPickerOpen, actionDialog])
 
+  useEffect(() => {
+    setCurrentImage(0)
+  }, [id])
+
   function openMaps(provider) {
     const q = encodeURIComponent(listing?.mapQuery ?? 'New York, NY')
     const url =
@@ -90,11 +94,6 @@ function ListingDetailInner({ id }) {
   }
 
   async function handleAction(kind) {
-    if (!user) {
-      navigate('/login')
-      return
-    }
-
     setActionBusy(true)
     setActiveAction(kind)
     setActionError('')
@@ -155,11 +154,26 @@ function ListingDetailInner({ id }) {
       : `${numericReviewCount} reviews`
     : 'No reviews yet'
 
-  const images = [
+  const apiOrigin = getApiOriginForStaticFiles()
+  const uploadedImages =
+    Array.isArray(listing.imageUrls) && listing.imageUrls.length > 0
+      ? listing.imageUrls.map((u) =>
+          typeof u === 'string' && u.startsWith('http') ? u : `${apiOrigin}${u}`,
+        )
+      : null
+
+  const fallbackImages = [
     'https://picsum.photos/id/1018/960/600',
     'https://picsum.photos/id/1015/960/600',
     'https://picsum.photos/id/1019/960/600',
   ]
+  const images = uploadedImages && uploadedImages.length > 0 ? uploadedImages : fallbackImages
+
+  const proofLinks = Array.isArray(listing.proofUrls)
+    ? listing.proofUrls.map((u) =>
+        typeof u === 'string' && u.startsWith('http') ? u : `${apiOrigin}${u}`,
+      )
+    : []
 
   return (
     <div className="listing-detail-page">
@@ -251,6 +265,21 @@ function ListingDetailInner({ id }) {
           >
             {listing.description}
           </p>
+
+          {proofLinks.length > 0 ? (
+            <div className="listing-detail-proofs">
+              <p className="listing-detail-proofs-label">Proof documents</p>
+              <ul className="listing-detail-proofs-list">
+                {proofLinks.map((href, i) => (
+                  <li key={`${href}-${i}`}>
+                    <a href={href} target="_blank" rel="noopener noreferrer">
+                      Open document {i + 1}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
 
           <button
             type="button"
@@ -394,12 +423,12 @@ function ListingDetailInner({ id }) {
             onClick={(e) => e.stopPropagation()}
           >
             <h2 id={actionDialogTitleId} className="listing-detail-map-dialog-title">
-              {actionDialog === 'apply' ? 'Applied!' : 'Contact request sent'}
+              {actionDialog === 'apply' ? 'Application saved' : 'Contact saved'}
             </h2>
             <p className="listing-detail-map-dialog-text">
               {actionDialog === 'apply'
-                ? 'Your application was submitted for this sublease.'
-                : 'Your contact request was sent to the lister. They may reply through SubVet.'}
+                ? 'Your application was saved. The lister can see your name and email in their profile notifications.'
+                : 'The lister was notified. They can see your name and account email in their profile to follow up with you. SubVet does not provide in-app chat yet.'}
             </p>
             <button
               ref={actionOkRef}

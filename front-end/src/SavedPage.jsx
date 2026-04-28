@@ -1,41 +1,22 @@
-// import { useMemo, useState } from 'react'
 import { useMemo } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import ListingCard from './ListingCard'
 import MainNav from './MainNav'
 import { useAuth } from './hooks/useAuth'
 import { useListings } from './hooks/useListings'
+import { buildLoginUrl } from './utils/authRedirect'
 import './SavedPage.css'
 
 function SavedPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { user } = useAuth()
-  // const { listings, loading } = useListings()
   const { listings, loading, savedIds, toggleSaved } = useListings()
 
-  // Seed some mock saved IDs so the page isn't empty on first visit
-  // const [savedIds, setSavedIds] = useState(() => new Set([1, 3, 5]))
-
-  // const savedListings = useMemo(
-  //   () => listings.filter((l) => savedIds.has(l.id)),
-  //   [listings, savedIds],
-  // ) 
-
   const savedListings = useMemo(
-  () => listings.filter((l) => savedIds.includes(l.id)),
-  [listings, savedIds],
+    () => listings.filter((l) => savedIds.includes(l.id)),
+    [listings, savedIds],
   )
-
-  
-
-  // function toggleSaved(id) {
-  //   setSavedIds((prev) => {
-  //     const next = new Set(prev)
-  //     if (next.has(id)) next.delete(id)
-  //     else next.add(id)
-  //     return next
-  //   })
-  // }
 
   return (
     <div className="saved-page">
@@ -60,8 +41,21 @@ function SavedPage() {
             <p className="saved-status" role="status">Loading…</p>
           ) : savedListings.length === 0 ? (
             <div className="saved-empty">
-              <p className="saved-empty-text">No saved listings yet.</p>
-              <Link to="/listings" className="saved-empty-link">Browse subleases</Link>
+              {!user ? (
+                <>
+                  <p className="saved-empty-text">Sign in to save listings and sync them to your account.</p>
+                  <Link to={buildLoginUrl('/saved')} className="saved-empty-link">
+                    Sign in
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <p className="saved-empty-text">No saved listings yet.</p>
+                  <Link to="/listings" className="saved-empty-link">
+                    Browse subleases
+                  </Link>
+                </>
+              )}
             </div>
           ) : (
             savedListings.map((listing) => (
@@ -75,14 +69,12 @@ function SavedPage() {
                   price={listing.price}
                   rating={listing.rating}
                   details={listing.details}
-                  // saved={savedIds.has(listing.id)}
-                  // onFavoriteToggle={() => toggleSaved(listing.id)}
                   saved={savedIds.includes(listing.id)}
                   onFavoriteToggle={async (e) => {
                     e.preventDefault()
                     e.stopPropagation()
                     if (!user) {
-                      navigate('/login')
+                      navigate(buildLoginUrl(location.pathname))
                       return
                     }
                     await toggleSaved(listing.id)
