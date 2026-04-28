@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { createContactRequest } from './api/actions'
 import { getTenantById } from './api/tenants'
 import MainNav from './MainNav'
@@ -8,17 +8,11 @@ import { useTenants } from './hooks/useTenants'
 import './TenantProfilePage.css'
 
 function TenantProfileDetail({ tenant }) {
-  const navigate = useNavigate()
   const { user } = useAuth()
   const [submitting, setSubmitting] = useState(false)
   const [status, setStatus] = useState('')
 
   async function handleContact() {
-    if (!user) {
-      navigate('/login')
-      return
-    }
-
     setSubmitting(true)
     setStatus('')
 
@@ -28,7 +22,7 @@ function TenantProfileDetail({ tenant }) {
         targetId: tenant.id,
         userId: user.id,
       })
-      setStatus('Contact request sent.')
+      setStatus('Saved — no in-app chat yet; your request is on record.')
     } catch (err) {
       setStatus(err.message || 'Could not send your contact request.')
     } finally {

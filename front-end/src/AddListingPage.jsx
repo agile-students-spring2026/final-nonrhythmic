@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
 import { useListings } from './hooks/useListings'
 import { useTenants } from './hooks/useTenants'
 import MainNav from './MainNav'
+import { uploadFiles } from './api/client'
 import './AddListingPage.css'
 
 const initialForm = {
@@ -41,10 +42,15 @@ function AddListingPage() {
   const { user } = useAuth()
   const { createListing } = useListings()
   const { createTenant } = useTenants()
+
   const [form, setForm] = useState(initialForm)
   const [submitted, setSubmitted] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
+
+  const sublessorPhotosRef = useRef(null)
+  const sublessorProofRef = useRef(null)
+  const tenantProofRef = useRef(null)
 
   function update(key, value) {
     setForm((f) => ({ ...f, [key]: value }))
@@ -56,7 +62,7 @@ function AddListingPage() {
     setSubmitError('')
 
     const isSublessor = form.role === 'sublessor'
-    const actorName = user?.name || 'Kaiyuan Wu'
+    const actorName = user?.name?.trim() || form.name?.trim() || 'Lister'
 
     try {
       if (isSublessor) {
@@ -64,6 +70,16 @@ function AddListingPage() {
         if (!monthlyPrice) {
           throw new Error('Enter a valid monthly rent.')
         }
+
+        const photoFiles = sublessorPhotosRef.current?.files?.length
+          ? Array.from(sublessorPhotosRef.current.files)
+          : []
+        const proofFiles = sublessorProofRef.current?.files?.length
+          ? Array.from(sublessorProofRef.current.files)
+          : []
+
+        const imageUrls = photoFiles.length ? await uploadFiles(photoFiles) : []
+        const proofUrls = proofFiles.length ? await uploadFiles(proofFiles) : []
 
         const createdListing = await createListing({
           name: form.name || 'New Listing',
@@ -77,6 +93,8 @@ function AddListingPage() {
           area: form.sublessorAddress || 'New York',
           rentUsd: Number(form.sublessorPrice),
           mapQuery: form.sublessorAddress || 'New York, NY',
+          imageUrls,
+          proofUrls,
         })
 
         setSubmitted({ role: 'sublessor', targetId: createdListing.id })
@@ -85,6 +103,11 @@ function AddListingPage() {
         if (!budget) {
           throw new Error('Enter a valid monthly budget.')
         }
+
+        const idProofFiles = tenantProofRef.current?.files?.length
+          ? Array.from(tenantProofRef.current.files)
+          : []
+        const proofUrls = idProofFiles.length ? await uploadFiles(idProofFiles) : []
 
         const createdTenant = await createTenant({
           displayName: form.name || actorName,
@@ -95,7 +118,8 @@ function AddListingPage() {
           intro: `${form.name || actorName} is looking for a summer sublease in ${form.tenantNeighborhoods}.`,
           ideal: form.tenantIdeal || 'Flexible on layout, but looking for a clean and safe place.',
           questions: form.tenantComments || 'No questions yet.',
-          company: user?.name || 'Summer internship',
+          company: user?.name?.trim() || 'Summer internship',
+          proofUrls,
         })
 
         setSubmitted({ role: 'tenant', targetId: createdTenant.id })
@@ -283,11 +307,25 @@ function AddListingPage() {
               </label>
               <label className="add-listing-field">
                 <span className="add-listing-label">Photos or diagram of apartment</span>
-                <input className="add-listing-file" type="file" accept="image/*,.pdf" multiple />
+                <input
+                  ref={sublessorPhotosRef}
+                  className="add-listing-file"
+                  type="file"
+                  accept="image/*,.pdf"
+                  multiple
+                />
+                <span className="add-listing-file-hint">Files are saved on the server when you submit.</span>
               </label>
               <label className="add-listing-field">
                 <span className="add-listing-label">Proof of sublet</span>
-                <input className="add-listing-file" type="file" accept=".pdf,image/*" />
+                <input
+                  ref={sublessorProofRef}
+                  className="add-listing-file"
+                  type="file"
+                  accept=".pdf,image/*"
+                  multiple
+                />
+                <span className="add-listing-file-hint">PDF or images — stored securely for the listing owner.</span>
               </label>
             </>
           ) : (
@@ -360,7 +398,14 @@ function AddListingPage() {
               </label>
               <label className="add-listing-field">
                 <span className="add-listing-label">Proof of identity</span>
-                <input className="add-listing-file" type="file" accept="image/*,.pdf" />
+                <input
+                  ref={tenantProofRef}
+                  className="add-listing-file"
+                  type="file"
+                  accept="image/*,.pdf"
+                  multiple
+                />
+                <span className="add-listing-file-hint">Stored on the server when you submit.</span>
               </label>
             </>
           )}

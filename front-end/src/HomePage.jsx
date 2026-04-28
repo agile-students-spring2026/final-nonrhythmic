@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
 import MainNav from './MainNav'
+import { useAuth } from './hooks/useAuth'
 import './HomePage.css'
 
 function HomePage() {
+  const { user } = useAuth()
   return (
     <div className="home-page">
       <div className="home-shell">
@@ -12,12 +14,23 @@ function HomePage() {
             Subleases and intern housing—browse places or find roommates for the summer.
           </p>
           <div className="home-auth">
-            <Link to="/login" className="home-auth-link">
-              Sign in
-            </Link>
-            <Link to="/register" className="home-auth-link home-auth-link--primary">
-              Create account
-            </Link>
+            {user ? (
+              <>
+                <span className="home-auth-greeting">Hi, {user.name}</span>
+                <Link to="/profile" className="home-auth-link home-auth-link--primary">
+                  Profile
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="home-auth-link">
+                  Sign in
+                </Link>
+                <Link to="/register" className="home-auth-link home-auth-link--primary">
+                  Create account
+                </Link>
+              </>
+            )}
           </div>
         </header>
 

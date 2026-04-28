@@ -1,10 +1,10 @@
 import { useEffect, useId, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import ListingCard from './ListingCard'
 import MainNav from './MainNav'
 import { useAuth } from './hooks/useAuth'
 import { useListings } from './hooks/useListings'
+import { buildLoginUrl } from './utils/authRedirect'
 import './ListingsPage.css'
 
 
@@ -72,14 +72,13 @@ function toggleListValue(list, value) {
 
 function ListingsPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { user } = useAuth()
-  // const { listings, loading, error } = useListings()
   const { listings, loading, error, savedIds, toggleSaved } = useListings()
   const areaOptions = useMemo(
     () => [...new Set(listings.map((l) => l.area))].sort(),
     [listings],
   )
-  // const [savedIds, setSavedIds] = useState(() => new Set())
   const [searchQuery, setSearchQuery] = useState('')
   const [appliedFilters, setAppliedFilters] = useState(() => cloneFilters(DEFAULT_FILTERS))
   const [filterOpen, setFilterOpen] = useState(false)
@@ -103,15 +102,6 @@ function ListingsPage() {
       ),
     [listings, searchQuery, appliedFilters],
   )
-
-  // function toggleSaved(id) {
-  //   setSavedIds((prev) => {
-  //     const next = new Set(prev)
-  //     if (next.has(id)) next.delete(id)
-  //     else next.add(id)
-  //     return next
-  //   })
-  // }
 
   function applyFilters() {
     setAppliedFilters(cloneFilters(draftFilters))
@@ -224,16 +214,12 @@ function ListingsPage() {
                   price={listing.price}
                   rating={listing.rating}
                   details={listing.details}
-                  // saved={savedIds.has(listing.id)}
-                  // saved={savedIds.includes(listing.id)}
-                  // onFavoriteToggle={() => toggleSaved(listing.id)}
-
                   saved={savedIds.includes(listing.id)}
                   onFavoriteToggle={async (e) => {
                     e.preventDefault()
                     e.stopPropagation()
                     if (!user) {
-                      navigate('/login')
+                      navigate(buildLoginUrl(location.pathname))
                       return
                     }
                     await toggleSaved(listing.id)

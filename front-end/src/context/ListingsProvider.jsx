@@ -15,6 +15,18 @@ export function ListingsProvider({ children }) {
   useEffect(() => {
     let cancelled = false
 
+    if (!user) {
+      setRaw([])
+      setError(null)
+      setLoading(false)
+      return () => {
+        cancelled = true
+      }
+    }
+
+    setLoading(true)
+    setError(null)
+
     getListings()
       .then((data) => {
         if (!cancelled) setRaw(Array.isArray(data) ? data : [])
@@ -29,7 +41,7 @@ export function ListingsProvider({ children }) {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [user])
 
   useEffect(() => {
     if (!activeUserId) return

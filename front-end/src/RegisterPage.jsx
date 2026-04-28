@@ -1,11 +1,12 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useMemo, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
-import MainNav from './MainNav'
+import { getSafeRedirect } from './utils/authRedirect'
 import './AuthPage.css'
 
 function RegisterPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { register } = useAuth()
   const [form, setForm] = useState({
     name: '',
@@ -15,6 +16,15 @@ function RegisterPage() {
   })
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+
+  const redirectParam = searchParams.get('redirect')
+  const afterRegisterPath = useMemo(
+    () => getSafeRedirect(redirectParam, '/listings'),
+    [redirectParam],
+  )
+  const loginHref = useMemo(() => {
+    return redirectParam ? `/login?redirect=${encodeURIComponent(redirectParam)}` : '/login'
+  }, [redirectParam])
 
   function update(key, value) {
     setForm((current) => ({ ...current, [key]: value }))
@@ -37,7 +47,7 @@ function RegisterPage() {
         email: form.email,
         password: form.password,
       })
-      navigate('/profile')
+      navigate(afterRegisterPath, { replace: true })
     } catch (err) {
       setError(err.message || 'Could not create your account right now.')
     } finally {
@@ -123,12 +133,10 @@ function RegisterPage() {
 
         <p className="auth-footer">
           Already have an account?{' '}
-          <Link to="/login" className="auth-link">
+          <Link to={loginHref} className="auth-link">
             Sign in
           </Link>
         </p>
-
-        <MainNav />
       </div>
     </div>
   )

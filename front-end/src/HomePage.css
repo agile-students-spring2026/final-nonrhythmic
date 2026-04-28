@@ -68,6 +68,18 @@
   gap: 0.5rem;
 }
 
+.home-auth-greeting {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-right: 0.25rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--hp-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .home-auth-link {
   display: inline-flex;
   align-items: center;

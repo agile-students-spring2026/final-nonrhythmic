@@ -7,6 +7,7 @@ const app = require('../app')
 const Application = require('../models/Application')
 const ContactRequest = require('../models/ContactRequest')
 const Listing = require('../models/Listing')
+const Notification = require('../models/Notification')
 const SavedListing = require('../models/SavedListing')
 const User = require('../models/User')
 
@@ -42,6 +43,9 @@ describe('Back-end API', () => {
 
     if (createdUserId !== null) {
       await SavedListing.deleteMany({ userId: createdUserId })
+      await Notification.deleteMany({
+        $or: [{ recipientUserId: createdUserId }, { fromUserId: createdUserId }],
+      })
       await User.deleteOne({ id: createdUserId })
     }
 
@@ -52,48 +56,6 @@ describe('Back-end API', () => {
     const res = await request(app).get('/health')
     expect(res.status).to.equal(200)
     expect(res.body).to.deep.equal({ ok: true })
-  })
-
-  it('returns listings from /api/listings', async () => {
-    const res = await request(app).get('/api/listings')
-    expect(res.status).to.equal(200)
-    expect(res.body).to.be.an('array')
-    expect(res.body.length).to.be.greaterThan(0)
-  })
-
-  it('returns 404 for unknown listing id', async () => {
-    const res = await request(app).get('/api/listings/999999')
-    expect(res.status).to.equal(404)
-    expect(res.body.error).to.equal('Listing not found')
-  })
-
-  it('rejects invalid listing payloads before touching the database', async () => {
-    const res = await request(app).post('/api/listings').send({
-      location: 'Manhattan',
-      price: '$1200/mo',
-    })
-
-    expect(res.status).to.equal(400)
-    expect(res.body.error).to.equal('name is required')
-  })
-
-  it('creates a listing with POST /api/listings', async () => {
-    const res = await request(app).post('/api/listings').send({
-      name: 'Test Listing',
-      location: 'Manhattan',
-      price: '$1200/mo',
-      rating: 4.8,
-      description: 'Sunny room near subway',
-    })
-
-    expect(res.status).to.equal(201)
-    expect(res.body).to.include({
-      name: 'Test Listing',
-      location: 'Manhattan',
-      price: '$1200/mo',
-    })
-    expect(res.body.id).to.be.a('number')
-    createdListingId = res.body.id
   })
 
   it('rejects invalid registration payloads', async () => {
@@ -145,6 +107,62 @@ describe('Back-end API', () => {
     expect(res.body.user.email).to.equal(userEmail)
     expect(res.body).to.have.property('token')
     authToken = res.body.token
+  })
+
+  it('requires auth for /api/listings', async () => {
+    const res = await request(app).get('/api/listings')
+    expect(res.status).to.equal(401)
+    expect(res.body.error).to.equal('Authorization token is required')
+  })
+
+  it('returns listings from /api/listings when authenticated', async () => {
+    const res = await request(app).get('/api/listings').set('Authorization', `Bearer ${authToken}`)
+    expect(res.status).to.equal(200)
+    expect(res.body).to.be.an('array')
+    expect(res.body.length).to.be.greaterThan(0)
+  })
+
+  it('returns 404 for unknown listing id', async () => {
+    const res = await request(app)
+      .get('/api/listings/999999')
+      .set('Authorization', `Bearer ${authToken}`)
+    expect(res.status).to.equal(404)
+    expect(res.body.error).to.equal('Listing not found')
+  })
+
+  it('rejects invalid listing payloads before touching the database', async () => {
+    const res = await request(app)
+      .post('/api/listings')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({
+        location: 'Manhattan',
+        price: '$1200/mo',
+      })
+
+    expect(res.status).to.equal(400)
+    expect(res.body.error).to.equal('name is required')
+  })
+
+  it('creates a listing with POST /api/listings', async () => {
+    const res = await request(app)
+      .post('/api/listings')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({
+        name: 'Test Listing',
+        location: 'Manhattan',
+        price: '$1200/mo',
+        rating: 4.8,
+        description: 'Sunny room near subway',
+      })
+
+    expect(res.status).to.equal(201)
+    expect(res.body).to.include({
+      name: 'Test Listing',
+      location: 'Manhattan',
+      price: '$1200/mo',
+    })
+    expect(res.body.id).to.be.a('number')
+    createdListingId = res.body.id
   })
 
   it('rejects protected requests without a token', async () => {

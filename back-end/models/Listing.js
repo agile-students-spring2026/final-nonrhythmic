@@ -16,6 +16,8 @@ const listingSchema = new mongoose.Schema(
     area: { type: String, default: '' },
     rentUsd: { type: Number, default: null },
     mapQuery: { type: String, default: '' },
+    imageUrls: { type: [String], default: [] },
+    proofUrls: { type: [String], default: [] },
   },
   { timestamps: true },
 )

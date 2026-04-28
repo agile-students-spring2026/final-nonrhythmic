@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { getUserById, updateUserById } from './api/users'
 import ListingCard from './ListingCard'
 import MainNav from './MainNav'
@@ -7,12 +7,13 @@ import { useAuth } from './hooks/useAuth'
 import { useListings } from './hooks/useListings'
 import './ProfilePage.css'
 import { getUserApplications } from './api/applications'
+import { getNotifications, markNotificationRead } from './api/notifications'
 
 function ProfilePage() {
-  const navigate = useNavigate()
   const { user, logout, syncUserProfile } = useAuth()
   const { listings, loading } = useListings()
-  const activeUserId = user?.id ?? 'demo'
+  const activeUserId = user?.id
+
   const [profile, setProfile] = useState(null)
   const [profileError, setProfileError] = useState('')
   const [profileLoading, setProfileLoading] = useState(true)
@@ -24,9 +25,20 @@ function ProfilePage() {
   const [appliedListings, setAppliedListings] = useState([])
   const [appliedLoading, setAppliedLoading] = useState(false)
   const [appliedError, setAppliedError] = useState('')
+  const [notifications, setNotifications] = useState([])
+  const [notifLoading, setNotifLoading] = useState(false)
 
   useEffect(() => {
     let cancelled = false
+    if (!activeUserId) {
+      setProfileLoading(false)
+      setProfile(null)
+      setProfileError('')
+      return () => {
+        cancelled = true
+      }
+    }
+
     setProfileLoading(true)
     setProfileError('')
 
@@ -78,9 +90,31 @@ function ProfilePage() {
     }
   }, [user, activeUserId])
 
-  const profileName = profile?.name ?? user?.name ?? 'Kaiyuan Wu'
-  const profileEmail = profile?.email ?? user?.email ?? 'demo@subvet.app'
-  const profileAvatarSeed = profile?.avatarSeed ?? profileName
+  useEffect(() => {
+    if (!activeUserId) return
+
+    let cancelled = false
+    setNotifLoading(true)
+
+    getNotifications(activeUserId)
+      .then((data) => {
+        if (!cancelled) setNotifications(Array.isArray(data) ? data : [])
+      })
+      .catch(() => {
+        if (!cancelled) setNotifications([])
+      })
+      .finally(() => {
+        if (!cancelled) setNotifLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [activeUserId])
+
+  const profileName = profile?.name ?? user?.name ?? ''
+  const profileEmail = profile?.email ?? user?.email ?? ''
+  const profileAvatarSeed = profile?.avatarSeed ?? (profileName || user?.name || 'member')
   const profileId = profile?.id ?? user?.id ?? null
 
   const myListings = useMemo(
@@ -94,11 +128,6 @@ function ProfilePage() {
   )
 
   function handleStartEdit() {
-    if (!user) {
-      navigate('/login')
-      return
-    }
-
     setSaveStatus('')
     setIsEditing(true)
   }
@@ -111,8 +140,7 @@ function ProfilePage() {
   }
 
   async function handleSaveProfile() {
-    if (!user || !profile) {
-      navigate('/login')
+    if (!profile) {
       return
     }
 
@@ -135,6 +163,33 @@ function ProfilePage() {
     } finally {
       setSaving(false)
     }
+  }
+
+  async function handleMarkNotificationRead(notificationId) {
+    if (!activeUserId) return
+    try {
+      await markNotificationRead(activeUserId, notificationId)
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n)),
+      )
+    } catch {
+      /* ignore */
+    }
+  }
+
+  function describeNotification(n) {
+    const name = n.fromUserName || 'Someone'
+    const email = n.fromEmail || ''
+    if (n.kind === 'listing_contact') {
+      return `${name} (${email}) contacted you about “${n.listingName || 'a listing'}”.`
+    }
+    if (n.kind === 'listing_application') {
+      return `${name} (${email}) applied to “${n.listingName || 'your listing'}”.`
+    }
+    if (n.kind === 'tenant_contact') {
+      return `${name} (${email}) contacted you about tenant profile “${n.tenantName || n.tenantId || 'profile'}”.`
+    }
+    return `${name} (${email}) sent you an update.`
   }
 
   return (
@@ -171,18 +226,50 @@ function ProfilePage() {
               <p className="profile-state profile-state--error">{profileError}</p>
             ) : (
               <>
-                <h2 className="profile-username">{profileName}</h2>
+                <h2 className="profile-username">{profileName || 'Your profile'}</h2>
                 <p className="profile-email">{profileEmail}</p>
-                {user ? (
-                  <button type="button" className="profile-session-btn" onClick={logout}>
-                    Sign out
-                  </button>
-                ) : (
-                  <p className="profile-hint">Sign in to edit your profile and save listings.</p>
-                )}
+                <button type="button" className="profile-session-btn" onClick={logout}>
+                  Sign out
+                </button>
               </>
             )}
           </div>
+
+          <section className="profile-section" aria-labelledby="profile-notify-heading">
+            <h2 id="profile-notify-heading" className="profile-section-title">
+              Notifications
+            </h2>
+            <p className="profile-notify-lead">
+              When someone contacts or applies about your listing, their name and email appear here so you can reach out.
+            </p>
+            {notifLoading ? (
+              <p className="profile-listings-hint">Loading notifications…</p>
+            ) : notifications.length === 0 ? (
+              <p className="profile-listings-hint">No notifications yet.</p>
+            ) : (
+              <ul className="profile-notify-list">
+                {notifications.map((n) => (
+                  <li
+                    key={n.id}
+                    className={
+                      n.read ? 'profile-notify-item' : 'profile-notify-item profile-notify-item--new'
+                    }
+                  >
+                    <p className="profile-notify-text">{describeNotification(n)}</p>
+                    {!n.read ? (
+                      <button
+                        type="button"
+                        className="profile-notify-read"
+                        onClick={() => handleMarkNotificationRead(n.id)}
+                      >
+                        Mark read
+                      </button>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
 
           <section className="profile-section" aria-labelledby="profile-about-heading">
             <div className="profile-section-head">
@@ -299,7 +386,7 @@ function ProfilePage() {
                   <div className="profile-applied-card" key={listing.id}>
                     <div className="profile-application-status">
                       <span className="profile-status-badge">Submitted</span>
-                      <span className="profile-status-text">Waiting for owner response</span>
+                      <span className="profile-status-text">Stored in SubVet — no in-app messaging yet</span>
                     </div>
 
                     <ListingCard
