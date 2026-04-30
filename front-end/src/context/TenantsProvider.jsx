@@ -6,34 +6,37 @@ import { TenantsContext } from './tenantsContext'
 export function TenantsProvider({ children }) {
   const { user } = useAuth()
   const [raw, setRaw] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(() => Boolean(user))
   const [error, setError] = useState(null)
 
   useEffect(() => {
     let cancelled = false
 
-    if (!user) {
-      setRaw([])
+    async function load() {
+      if (!user) {
+        await Promise.resolve()
+        if (cancelled) return
+        setRaw([])
+        setError(null)
+        setLoading(false)
+        return
+      }
+      await Promise.resolve()
+      if (cancelled) return
+      setLoading(true)
       setError(null)
-      setLoading(false)
-      return () => {
-        cancelled = true
+
+      try {
+        const data = await getTenants()
+        if (!cancelled) setRaw(Array.isArray(data) ? data : [])
+      } catch {
+        if (!cancelled) setError('Unable to reach the tenant directory. Check your connection.')
+      } finally {
+        if (!cancelled) setLoading(false)
       }
     }
 
-    setLoading(true)
-    setError(null)
-
-    getTenants()
-      .then((data) => {
-        if (!cancelled) setRaw(Array.isArray(data) ? data : [])
-      })
-      .catch(() => {
-        if (!cancelled) setError('Unable to reach the tenant directory. Check your connection.')
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
+    void load()
     return () => {
       cancelled = true
     }

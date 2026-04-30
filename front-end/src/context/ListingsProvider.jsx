@@ -8,36 +8,38 @@ export function ListingsProvider({ children }) {
   const { user } = useAuth()
   const activeUserId = user?.id ?? null
   const [raw, setRaw] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(() => Boolean(user))
   const [error, setError] = useState(null)
   const [storedSavedIds, setStoredSavedIds] = useState([])
 
   useEffect(() => {
     let cancelled = false
 
-    if (!user) {
-      setRaw([])
+    async function load() {
+      if (!user) {
+        await Promise.resolve()
+        if (cancelled) return
+        setRaw([])
+        setError(null)
+        setLoading(false)
+        return
+      }
+      await Promise.resolve()
+      if (cancelled) return
+      setLoading(true)
       setError(null)
-      setLoading(false)
-      return () => {
-        cancelled = true
+
+      try {
+        const data = await getListings()
+        if (!cancelled) setRaw(Array.isArray(data) ? data : [])
+      } catch {
+        if (!cancelled) setError('Unable to reach the listings service. Check your connection.')
+      } finally {
+        if (!cancelled) setLoading(false)
       }
     }
 
-    setLoading(true)
-    setError(null)
-
-    getListings()
-      .then((data) => {
-        if (!cancelled) setRaw(Array.isArray(data) ? data : [])
-      })
-      .catch(() => {
-        if (!cancelled) setError('Unable to reach the listings service. Check your connection.')
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-
+    void load()
     return () => {
       cancelled = true
     }
