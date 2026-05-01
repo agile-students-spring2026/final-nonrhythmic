@@ -32,9 +32,6 @@ function ListingDetailInner({ id }) {
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
-    setActionError('')
-
     fetchProductById(id)
       .then((data) => {
         if (cancelled) return
@@ -78,10 +75,6 @@ function ListingDetailInner({ id }) {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [mapPickerOpen, actionDialog])
-
-  useEffect(() => {
-    setCurrentImage(0)
-  }, [id])
 
   function openMaps(provider) {
     const q = encodeURIComponent(listing?.mapQuery ?? 'New York, NY')

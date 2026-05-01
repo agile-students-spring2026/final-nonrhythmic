@@ -12,7 +12,48 @@ import { getNotifications, markNotificationRead } from './api/notifications'
 function ProfilePage() {
   const { user, logout, syncUserProfile } = useAuth()
   const { listings, loading } = useListings()
-  const activeUserId = user?.id
+
+  if (!user) {
+    return (
+      <div className="profile-page">
+        <div className="profile-shell">
+          <header className="profile-top">
+            <Link to="/" className="profile-back" aria-label="Back to home">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M15 6l-6 6 6 6"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </Link>
+            <h1 className="profile-heading">My Profile</h1>
+          </header>
+          <div className="profile-body">
+            <p className="profile-state">Sign in to view your profile.</p>
+          </div>
+          <MainNav active="profile" />
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <ProfilePageAuthenticated
+      key={user.id}
+      user={user}
+      logout={logout}
+      syncUserProfile={syncUserProfile}
+      listings={listings}
+      listingsLoading={loading}
+    />
+  )
+}
+
+function ProfilePageAuthenticated({ user, logout, syncUserProfile, listings, listingsLoading }) {
+  const activeUserId = user.id
 
   const [profile, setProfile] = useState(null)
   const [profileError, setProfileError] = useState('')
@@ -23,24 +64,13 @@ function ProfilePage() {
   const [saving, setSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState('')
   const [appliedListings, setAppliedListings] = useState([])
-  const [appliedLoading, setAppliedLoading] = useState(false)
+  const [appliedLoading, setAppliedLoading] = useState(true)
   const [appliedError, setAppliedError] = useState('')
   const [notifications, setNotifications] = useState([])
-  const [notifLoading, setNotifLoading] = useState(false)
+  const [notifLoading, setNotifLoading] = useState(true)
 
   useEffect(() => {
     let cancelled = false
-    if (!activeUserId) {
-      setProfileLoading(false)
-      setProfile(null)
-      setProfileError('')
-      return () => {
-        cancelled = true
-      }
-    }
-
-    setProfileLoading(true)
-    setProfileError('')
 
     getUserById(activeUserId)
       .then((nextProfile) => {
@@ -63,14 +93,7 @@ function ProfilePage() {
   }, [activeUserId])
 
   useEffect(() => {
-    if (!user || !activeUserId) {
-      setAppliedListings([])
-      return
-    }
-
     let cancelled = false
-    setAppliedLoading(true)
-    setAppliedError('')
 
     getUserApplications(activeUserId)
       .then((listings) => {
@@ -88,13 +111,10 @@ function ProfilePage() {
     return () => {
       cancelled = true
     }
-  }, [user, activeUserId])
+  }, [activeUserId])
 
   useEffect(() => {
-    if (!activeUserId) return
-
     let cancelled = false
-    setNotifLoading(true)
 
     getNotifications(activeUserId)
       .then((data) => {
@@ -346,7 +366,7 @@ function ProfilePage() {
               Created listings
             </h2>
 
-            {loading ? (
+            {listingsLoading ? (
               <p className="profile-listings-hint">Loading listings…</p>
             ) : myListings.length === 0 ? (
               <p className="profile-listings-hint">No created listings yet.</p>
@@ -414,3 +434,4 @@ function ProfilePage() {
 }
 
 export default ProfilePage
+
