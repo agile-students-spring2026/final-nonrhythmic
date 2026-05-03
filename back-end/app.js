@@ -354,7 +354,7 @@ async function ensureListingsSeeded() {
     details: listing.details || 'Private room · shared unit',
     description: listing.description || 'No description provided yet.',
     ownerId: index < 2 ? 'demo' : null,
-    owner: index < 2 ? 'Kaiyuan Wu' : 'Other User',
+    owner: index < 2 ? 'User' : 'Other User',
     bhk: listing.bhk ? String(listing.bhk) : 'room',
     area: listing.area ? String(listing.area).trim() : String(listing.location).trim(),
     rentUsd: Number.isFinite(Number(listing.rentUsd)) ? Number(listing.rentUsd) : null,
@@ -376,7 +376,7 @@ async function ensureUsersSeeded() {
   await User.create(
     buildUserDoc({
       id: 'demo',
-      name: 'Kaiyuan Wu',
+      name: 'User',
       email: 'demo@subvet.app',
       passwordHash,
       bio: 'Hi, I am looking for a clean and safe place near campus. I prefer a quiet environment and easy access to public transportation.',
