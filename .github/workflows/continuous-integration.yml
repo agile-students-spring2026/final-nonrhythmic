@@ -56,11 +56,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Ephemeral compose.env (gitignored locally; required by compose for api env_file)
-        run: |
-          printf '%s\n' \
-            'JWT_SECRET=ci-docker-image-build-only-not-for-production' \
-            'MONGO_URI=mongodb://mongo:27017/subvet' \
-            > compose.env
-      - name: Build container images
-        run: docker compose build
+      - name: Build API container image
+        run: docker build -t subvet-api ./back-end
+      - name: Build web container image
+        run: docker build -t subvet-web ./front-end

@@ -2,6 +2,11 @@
 
 SubVet is a student-focused short-term housing platform for browsing sublease listings, discovering potential roommates, and managing common renter actions in one place.
 
+## Live Deployment
+
+- Front end: https://subvet-web.onrender.com
+- API health check: https://subvet-api.onrender.com/api/health
+
 The project now runs as a split-stack app:
 
 - `front-end/`: Vite + React client
@@ -59,10 +64,45 @@ Optional front-end environment variable:
 - Back-end tests: `cd back-end && npm test`
 - Front-end lint: `cd front-end && npm run lint`
 - Front-end build: `cd front-end && npm run build`
+- API container build: `docker build -t subvet-api ./back-end`
+- Web container build: `docker build -t subvet-web ./front-end`
+
+## Render Deployment
+
+The production app is deployed on Render as two Dockerized web services:
+
+- `subvet-api`: Express API container from `back-end/Dockerfile`
+- `subvet-web`: static React container from `front-end/Dockerfile`
+
+Required Render environment variables for `subvet-api`:
+
+- `MONGO_URI`
+- `JWT_SECRET`
+- `HOST=0.0.0.0`
+- `NODE_ENV=production`
+
+Required Render environment variables for `subvet-web`:
+
+- `VITE_API_BASE_URL=https://subvet-api.onrender.com/api`
+
+Manual Render deploy commands:
+
+```bash
+render deploys create srv-d7shgenavr4c73b6dkh0
+render deploys create srv-d7shghhj2pic73falci0
+```
+
+Continuous deployment is configured with Render auto-deploy for both Docker services from `master`.
+
+## Extra Credit Completed
+
+- Docker/container deployment: both production services run from committed Dockerfiles.
+- Continuous integration: GitHub Actions runs front-end lint/build, back-end tests, and Docker image builds.
+- Continuous deployment: Render auto-deploy rebuilds and deploys both Docker services from the connected GitHub branch.
 
 ## Docker (container deployment)
 
-Three services: **MongoDB 7**, **Express API** (`back-end/Dockerfile`), **nginx + static React** (`front-end/Dockerfile`). Nginx proxies `/api` and `/uploads` to the API so the browser uses one origin (good for production and matches `VITE_API_BASE_URL=/api` at image build time).
+Three services: **MongoDB 7**, **Express API** (`back-end/Dockerfile`), **static React web** (`front-end/Dockerfile`). The API is exposed on `http://localhost:3000`, and the front-end image is built with `VITE_API_BASE_URL=http://localhost:3000/api`.
 
 ```bash
 cp compose.env.example compose.env

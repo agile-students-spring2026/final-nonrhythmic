@@ -119,6 +119,7 @@ typings/
 
 # Docker Compose local secrets (see compose.env.example)
 compose.env
+.railway/
 
 # Uploaded files (local disk storage)
 back-end/uploads/
