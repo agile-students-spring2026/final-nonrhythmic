@@ -4,8 +4,8 @@ SubVet is a student-focused short-term housing platform for browsing sublease li
 
 ## Live Deployment
 
-- Front end: https://subvet-web-production-e502.up.railway.app
-- API health check: https://subvet-api-production-7db9.up.railway.app/api/health
+- Front end: https://subvet-web.onrender.com
+- API health check: https://subvet-api.onrender.com/api/health
 
 The project now runs as a split-stack app:
 
@@ -67,44 +67,38 @@ Optional front-end environment variable:
 - API container build: `docker build -t subvet-api ./back-end`
 - Web container build: `docker build -t subvet-web ./front-end`
 
-## Railway Deployment
+## Render Deployment
 
-The production app is deployed on Railway as two Dockerized services in one project:
+The production app is deployed on Render as two Dockerized web services:
 
 - `subvet-api`: Express API container from `back-end/Dockerfile`
 - `subvet-web`: static React container from `front-end/Dockerfile`
 
-Required Railway variables for `subvet-api`:
+Required Render environment variables for `subvet-api`:
 
 - `MONGO_URI`
 - `JWT_SECRET`
 - `HOST=0.0.0.0`
-- `PORT=3000`
 - `NODE_ENV=production`
-- `RAILWAY_DOCKERFILE_PATH=Dockerfile`
 
-Required Railway variables for `subvet-web`:
+Required Render environment variables for `subvet-web`:
 
-- `VITE_API_BASE_URL=https://subvet-api-production-7db9.up.railway.app/api`
-- `RAILWAY_DOCKERFILE_PATH=Dockerfile`
+- `VITE_API_BASE_URL=https://subvet-api.onrender.com/api`
 
-Manual Railway deploy commands:
+Manual Render deploy commands:
 
 ```bash
-railway up --service subvet-api --path-as-root back-end
-railway up --service subvet-web --path-as-root front-end
+render deploys create srv-d7shgenavr4c73b6dkh0
+render deploys create srv-d7shghhj2pic73falci0
 ```
 
-Continuous deployment is configured in `.github/workflows/railway-deploy.yml`. Add these GitHub repository secrets before relying on the workflow:
-
-- `RAILWAY_TOKEN`
-- `RAILWAY_PROJECT_ID`
+Continuous deployment is configured with Render auto-deploy for both Docker services from `master`.
 
 ## Extra Credit Completed
 
 - Docker/container deployment: both production services run from committed Dockerfiles.
 - Continuous integration: GitHub Actions runs front-end lint/build, back-end tests, and Docker image builds.
-- Continuous deployment: GitHub Actions can deploy both Railway services automatically on pushes to `master` once Railway secrets are configured.
+- Continuous deployment: Render auto-deploy rebuilds and deploys both Docker services from the connected GitHub branch.
 
 ## Docker (container deployment)
 
