@@ -2,6 +2,11 @@
 
 SubVet is a student-focused short-term housing platform for browsing sublease listings, discovering potential roommates, and managing common renter actions in one place.
 
+## Live Deployment
+
+- Front end: https://subvet-web-production.up.railway.app
+- API health check: https://subvet-api-production.up.railway.app/api/health
+
 The project now runs as a split-stack app:
 
 - `front-end/`: Vite + React client
@@ -59,10 +64,51 @@ Optional front-end environment variable:
 - Back-end tests: `cd back-end && npm test`
 - Front-end lint: `cd front-end && npm run lint`
 - Front-end build: `cd front-end && npm run build`
+- API container build: `docker build -t subvet-api ./back-end`
+- Web container build: `docker build -t subvet-web ./front-end`
+
+## Railway Deployment
+
+The production app is deployed on Railway as two Dockerized services in one project:
+
+- `subvet-api`: Express API container from `back-end/Dockerfile`
+- `subvet-web`: nginx + static React container from `front-end/Dockerfile`
+
+Required Railway variables for `subvet-api`:
+
+- `MONGO_URI`
+- `JWT_SECRET`
+- `HOST=0.0.0.0`
+- `PORT=3000`
+- `NODE_ENV=production`
+- `RAILWAY_DOCKERFILE_PATH=Dockerfile`
+
+Required Railway variables for `subvet-web`:
+
+- `VITE_API_BASE_URL=https://subvet-api-production.up.railway.app/api`
+- `RAILWAY_DOCKERFILE_PATH=Dockerfile`
+
+Manual Railway deploy commands:
+
+```bash
+railway up --service subvet-api --path-as-root back-end
+railway up --service subvet-web --path-as-root front-end
+```
+
+Continuous deployment is configured in `.github/workflows/railway-deploy.yml`. Add these GitHub repository secrets before relying on the workflow:
+
+- `RAILWAY_TOKEN`
+- `RAILWAY_PROJECT_ID`
+
+## Extra Credit Completed
+
+- Docker/container deployment: both production services run from committed Dockerfiles.
+- Continuous integration: GitHub Actions runs front-end lint/build, back-end tests, and Docker image builds.
+- Continuous deployment: GitHub Actions can deploy both Railway services automatically on pushes to `master` once Railway secrets are configured.
 
 ## Docker (container deployment)
 
-Three services: **MongoDB 7**, **Express API** (`back-end/Dockerfile`), **nginx + static React** (`front-end/Dockerfile`). Nginx proxies `/api` and `/uploads` to the API so the browser uses one origin (good for production and matches `VITE_API_BASE_URL=/api` at image build time).
+Three services: **MongoDB 7**, **Express API** (`back-end/Dockerfile`), **nginx + static React** (`front-end/Dockerfile`). The API is exposed on `http://localhost:3000`, and the front-end image is built with `VITE_API_BASE_URL=http://localhost:3000/api`.
 
 ```bash
 cp compose.env.example compose.env

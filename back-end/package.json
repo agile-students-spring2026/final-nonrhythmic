@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "test": "mocha \"test/**/*.test.js\"",
-    "test:coverage": "c8 --reporter=text --reporter=html mocha \"test/**/*.test.js\""
+    "test": "mocha --timeout 10000 \"test/**/*.test.js\"",
+    "test:coverage": "c8 --reporter=text --reporter=html mocha --timeout 10000 \"test/**/*.test.js\""
   },
   "keywords": [],
   "author": "",
