@@ -1,0 +1,51 @@
+# SubVet stack: MongoDB + API + static front-end (nginx → /api, /uploads)
+#
+# 1. cp compose.env.example compose.env
+# 2. Edit compose.env — set JWT_SECRET (e.g. openssl rand -hex 32)
+# 3. docker compose up --build
+# 4. Open http://localhost:8080
+#
+# For Atlas: set MONGO_URI in compose.env, remove the mongo service and api.depends_on.mongo.
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand({ ping: 1 }).ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 8
+      start_period: 15s
+
+  api:
+    build: ./back-end
+    restart: unless-stopped
+    env_file:
+      - compose.env
+    environment:
+      PORT: "3000"
+      HOST: 0.0.0.0
+    volumes:
+      - api_uploads:/app/uploads
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./front-end
+      args:
+        VITE_API_BASE_URL: /api
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  mongo_data:
+  api_uploads:

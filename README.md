@@ -60,6 +60,21 @@ Optional front-end environment variable:
 - Front-end lint: `cd front-end && npm run lint`
 - Front-end build: `cd front-end && npm run build`
 
+## Docker (container deployment)
+
+Three services: **MongoDB 7**, **Express API** (`back-end/Dockerfile`), **nginx + static React** (`front-end/Dockerfile`). Nginx proxies `/api` and `/uploads` to the API so the browser uses one origin (good for production and matches `VITE_API_BASE_URL=/api` at image build time).
+
+```bash
+cp compose.env.example compose.env
+# Edit compose.env — set a strong JWT_SECRET (e.g. openssl rand -hex 32)
+
+docker compose up --build
+```
+
+Then open **http://localhost:8080**. Uploads persist in the `api_uploads` volume; Mongo data in `mongo_data`.
+
+For **MongoDB Atlas** on a droplet: put your Atlas `MONGO_URI` in `compose.env`, remove the `mongo` service (and `mongo_data` volume) from `docker-compose.yml`, and remove `api.depends_on.mongo`.
+
 ## Team Members
 
 - Jack Chen — https://github.com/hc4893-lab

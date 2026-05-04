@@ -117,6 +117,9 @@ typings/
 # dotenv environment variables file
 .env
 
+# Docker Compose local secrets (see compose.env.example)
+compose.env
+
 # Uploaded files (local disk storage)
 back-end/uploads/
 
