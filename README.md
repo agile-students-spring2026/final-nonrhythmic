@@ -4,8 +4,8 @@ SubVet is a student-focused short-term housing platform for browsing sublease li
 
 ## Live Deployment
 
-- Front end: https://subvet-web-production.up.railway.app
-- API health check: https://subvet-api-production.up.railway.app/api/health
+- Front end: https://subvet-web-production-e502.up.railway.app
+- API health check: https://subvet-api-production-7db9.up.railway.app/api/health
 
 The project now runs as a split-stack app:
 
@@ -72,7 +72,7 @@ Optional front-end environment variable:
 The production app is deployed on Railway as two Dockerized services in one project:
 
 - `subvet-api`: Express API container from `back-end/Dockerfile`
-- `subvet-web`: nginx + static React container from `front-end/Dockerfile`
+- `subvet-web`: static React container from `front-end/Dockerfile`
 
 Required Railway variables for `subvet-api`:
 
@@ -85,7 +85,7 @@ Required Railway variables for `subvet-api`:
 
 Required Railway variables for `subvet-web`:
 
-- `VITE_API_BASE_URL=https://subvet-api-production.up.railway.app/api`
+- `VITE_API_BASE_URL=https://subvet-api-production-7db9.up.railway.app/api`
 - `RAILWAY_DOCKERFILE_PATH=Dockerfile`
 
 Manual Railway deploy commands:
@@ -108,7 +108,7 @@ Continuous deployment is configured in `.github/workflows/railway-deploy.yml`. A
 
 ## Docker (container deployment)
 
-Three services: **MongoDB 7**, **Express API** (`back-end/Dockerfile`), **nginx + static React** (`front-end/Dockerfile`). The API is exposed on `http://localhost:3000`, and the front-end image is built with `VITE_API_BASE_URL=http://localhost:3000/api`.
+Three services: **MongoDB 7**, **Express API** (`back-end/Dockerfile`), **static React web** (`front-end/Dockerfile`). The API is exposed on `http://localhost:3000`, and the front-end image is built with `VITE_API_BASE_URL=http://localhost:3000/api`.
 
 ```bash
 cp compose.env.example compose.env
