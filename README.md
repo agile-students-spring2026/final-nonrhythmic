@@ -64,8 +64,8 @@ Optional front-end environment variable:
 - Back-end tests: `cd back-end && npm test`
 - Front-end lint: `cd front-end && npm run lint`
 - Front-end build: `cd front-end && npm run build`
-- API container build: `docker build -t subvet-api ./back-end`
-- Web container build: `docker build -t subvet-web ./front-end`
+- Container stack validation: `cp compose.env.example compose.env && docker compose config`
+- Container image build: `docker compose build`
 
 ## Render Deployment
 
@@ -73,6 +73,8 @@ The production app is deployed on Render as two Dockerized web services:
 
 - `subvet-api`: Express API container from `back-end/Dockerfile`
 - `subvet-web`: static React container from `front-end/Dockerfile`
+
+The committed `render.yaml` defines both services as Render Docker web services and sets `autoDeployTrigger: checksPass`, so Render deploys from `master` only after GitHub checks pass.
 
 Required Render environment variables for `subvet-api`:
 
@@ -84,6 +86,8 @@ Required Render environment variables for `subvet-api`:
 Required Render environment variables for `subvet-web`:
 
 - `VITE_API_BASE_URL=https://subvet-api.onrender.com/api`
+
+Do not commit real `.env`, `compose.env`, Atlas URIs, or JWT secrets. Commit the checked-in examples and provide real secrets through Render/GitHub settings or the course's private submission channel.
 
 Manual Render deploy commands:
 
