@@ -4,7 +4,8 @@ function resolveApiBaseUrl() {
     return String(fromEnv).trim().replace(/\/$/, '')
   }
   // Same-origin `/api` in dev → Vite proxies to the Express server (see vite.config.js).
-  if (import.meta.env.DEV) return '/api'
+  // if (import.meta.env.DEV) return '/api'
+  if (import.meta.env.DEV) return 'http://localhost:3000/api'
   return 'http://localhost:3000/api'
 }
 

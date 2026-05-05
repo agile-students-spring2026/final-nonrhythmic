@@ -15,3 +15,8 @@ export function createListing(payload) {
   })
 }
 
+export function deleteListing(id) {
+  return apiRequest(`/listings/${id}`, {
+    method: 'DELETE',
+  })
+}

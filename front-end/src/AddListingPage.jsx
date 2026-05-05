@@ -219,32 +219,49 @@ function AddListingPage() {
             </div>
           </fieldset>
 
-          <div className="add-listing-row-split add-listing-row-split--name-age">
-            <label className="add-listing-field">
-              <span className="add-listing-label">Name</span>
-              <input
-                className="add-listing-input"
-                type="text"
-                autoComplete="name"
-                value={form.name}
-                onChange={(e) => update('name', e.target.value)}
-                required
-              />
-            </label>
-            <label className="add-listing-field">
-              <span className="add-listing-label">Age</span>
-              <input
-                className="add-listing-input"
-                type="number"
-                min={16}
-                max={99}
-                inputMode="numeric"
-                value={form.age}
-                onChange={(e) => update('age', e.target.value)}
-                required
-              />
-            </label>
-          </div>
+          {isSublessor ? (
+              <label className="add-listing-field">
+                <span className="add-listing-label">Listing title</span>
+                <input
+                  placeholder="e.g. Furnished studio near NYU"
+                  className="add-listing-input"
+                  type="text"
+                  autoComplete="off"
+                  value={form.name}
+                  onChange={(e) => update('name', e.target.value)}
+                  required
+                />
+              </label>
+            ) : (
+              <div className="add-listing-row-split add-listing-row-split--name-age">
+                <label className="add-listing-field">
+                  <span className="add-listing-label">Your name</span>
+                  <input
+                    placeholder="e.g. Jack"
+                    className="add-listing-input"
+                    type="text"
+                    autoComplete="name"
+                    value={form.name}
+                    onChange={(e) => update('name', e.target.value)}
+                    required
+                  />
+                </label>
+
+                <label className="add-listing-field">
+                  <span className="add-listing-label">Age</span>
+                  <input
+                    className="add-listing-input"
+                    type="number"
+                    min={16}
+                    max={99}
+                    inputMode="numeric"
+                    value={form.age}
+                    onChange={(e) => update('age', e.target.value)}
+                    required
+                  />
+                </label>
+              </div>
+            )}
 
           {isSublessor ? (
             <>

@@ -495,6 +495,30 @@ app.post(
   },
 )
 
+app.delete('/api/listings/:id', requireAuth, async (req, res) => {
+  try {
+    const id = Number(req.params.id)
+
+    const listing = await Listing.findOne({ id })
+    if (!listing) {
+      return res.status(404).json({ error: 'Listing not found' })
+    }
+
+    if (listing.ownerId !== req.auth.userId) {
+      return res.status(403).json({ error: 'Only the owner can delete this listing' })
+    }
+
+    await Listing.deleteOne({ id })
+    await SavedListing.deleteMany({ listingId: id })
+    await Application.deleteMany({ listingId: id })
+    await Notification.deleteMany({ listingId: id })
+
+    return res.json({ ok: true })
+  } catch {
+    return res.status(500).json({ error: 'Failed to delete listing' })
+  }
+})
+
 app.get(
   '/api/users/:id/applications',
   requireAuth,
