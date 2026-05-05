@@ -9,6 +9,8 @@ import './ProfilePage.css'
 import { getUserApplications } from './api/applications'
 import { getNotifications, markNotificationRead } from './api/notifications'
 
+import { deleteListing } from './api/listings'
+
 function ProfilePage() {
   const { user, logout, syncUserProfile } = useAuth()
   const { listings, loading } = useListings()
@@ -68,6 +70,10 @@ function ProfilePageAuthenticated({ user, logout, syncUserProfile, listings, lis
   const [appliedError, setAppliedError] = useState('')
   const [notifications, setNotifications] = useState([])
   const [notifLoading, setNotifLoading] = useState(true)
+
+  const [deletedListingIds, setDeletedListingIds] = useState([])
+  const [deleteError, setDeleteError] = useState('')
+  const [deletingListingId, setDeletingListingId] = useState(null)
 
   useEffect(() => {
     let cancelled = false
@@ -141,11 +147,40 @@ function ProfilePageAuthenticated({ user, logout, syncUserProfile, listings, lis
     () =>
       listings.filter(
         (listing) =>
-          (profileId && listing.ownerId === profileId) ||
-          (!listing.ownerId && listing.owner === profileName),
+          !deletedListingIds.includes(listing.id) &&
+          ((profileId && listing.ownerId === profileId) ||
+            (!listing.ownerId && listing.owner === profileName)),
       ),
-    [listings, profileId, profileName],
+    [listings, profileId, profileName, deletedListingIds],
   )
+
+  const uniqueAppliedListings = useMemo(() => {
+  const seenListingIds = new Set()
+
+  return appliedListings.filter((listing) => {
+    if (!listing?.id) return true
+    if (seenListingIds.has(listing.id)) return false
+    seenListingIds.add(listing.id)
+    return true
+  })
+}, [appliedListings])
+
+  async function handleDeleteListing(listingId) {
+    const ok = window.confirm('Delete this created sublease? This cannot be undone.')
+    if (!ok) return
+
+    setDeleteError('')
+    setDeletingListingId(listingId)
+
+    try {
+      await deleteListing(listingId)
+      setDeletedListingIds((prev) => [...prev, listingId])
+    } catch (err) {
+      setDeleteError(err.message || 'Could not delete this listing right now.')
+    } finally {
+      setDeletingListingId(null)
+    }
+  }
 
   function handleStartEdit() {
     setSaveStatus('')
@@ -363,8 +398,12 @@ function ProfilePageAuthenticated({ user, logout, syncUserProfile, listings, lis
 
           <section className="profile-section" aria-labelledby="profile-listings-heading">
             <h2 id="profile-listings-heading" className="profile-listings-title">
-              Created listings
+              Created subleases
             </h2>
+
+            {deleteError ? (
+              <p className="profile-status profile-status--error">{deleteError}</p>
+            ) : null}
 
             {listingsLoading ? (
               <p className="profile-listings-hint">Loading listings…</p>
@@ -373,18 +412,27 @@ function ProfilePageAuthenticated({ user, logout, syncUserProfile, listings, lis
             ) : (
               <div className="profile-listings-stack">
                 {myListings.map((listing) => (
-                  <ListingCard
-                    key={listing.id}
-                    variant="feed"
-                    to={`/listing/${listing.id}`}
-                    name={listing.name}
-                    location={listing.location}
-                    price={listing.price}
-                    imageSeed={`subvet-${listing.id}`}
-                    rating={listing.rating}
-                    details={listing.details}
-                    showFavorite={false}
-                  />
+                  <div className="profile-created-card" key={listing.id}>
+                    <ListingCard
+                      variant="feed"
+                      to={`/listing/${listing.id}`}
+                      name={listing.name}
+                      location={listing.location}
+                      price={listing.price}
+                      imageSeed={`subvet-${listing.id}`}
+                      rating={listing.rating}
+                      details={listing.details}
+                      showFavorite={false}
+                    />
+                    <button
+                      type="button"
+                      className="profile-delete-listing-btn"
+                      onClick={() => handleDeleteListing(listing.id)}
+                      disabled={deletingListingId === listing.id}
+                    >
+                      {deletingListingId === listing.id ? 'Deleting...' : 'Delete'}
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
@@ -398,11 +446,12 @@ function ProfilePageAuthenticated({ user, logout, syncUserProfile, listings, lis
               <p className="profile-listings-hint">Loading applied listings…</p>
             ) : appliedError ? (
               <p className="profile-listings-hint">{appliedError}</p>
-            ) : appliedListings.length === 0 ? (
+            
+            ) : uniqueAppliedListings.length === 0 ? (
               <p className="profile-listings-hint">No applied listings yet.</p>
             ) : (
               <div className="profile-listings-stack">
-                {appliedListings.map((listing) => (
+               {uniqueAppliedListings.map((listing) => (
                   <div className="profile-applied-card" key={listing.id}>
                     <div className="profile-application-status">
                       <span className="profile-status-badge">Submitted</span>
@@ -420,6 +469,8 @@ function ProfilePageAuthenticated({ user, logout, syncUserProfile, listings, lis
                       details={listing.details}
                       showFavorite={false}
                     />
+
+                    
                   </div>
                 ))}
               </div>
