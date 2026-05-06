@@ -10,6 +10,9 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   front-end:
     runs-on: ubuntu-latest
@@ -21,7 +24,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - run: npm install
+          cache: npm
+          cache-dependency-path: front-end/package-lock.json
+      - run: npm ci
       - run: npm run lint
       - run: npm run build
 
@@ -49,14 +54,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - run: npm install
+          cache: npm
+          cache-dependency-path: back-end/package-lock.json
+      - run: npm ci
       - run: npm test
 
   docker:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build API container image
-        run: docker build -t subvet-api ./back-end
-      - name: Build web container image
-        run: docker build -t subvet-web ./front-end
+      - name: Validate compose configuration
+        run: |
+          cp compose.env.example compose.env
+          docker compose config
+      - name: Build compose images
+        run: docker compose build
